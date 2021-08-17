@@ -1,0 +1,5 @@
+# sister-cloudmask dependencies
+hy-tools-lite
+numpy
+scipy
+scikit-image
