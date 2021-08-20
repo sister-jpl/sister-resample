@@ -33,6 +33,7 @@ def main():
     parser.add_argument('in_file', type=str)
     parser.add_argument('out_dir', type=str)
     parser.add_argument('--verbose', action='store_true')
+    parser.add_argument('--type',type=str, default='linear')
 
     args = parser.parse_args()
 
@@ -41,9 +42,9 @@ def main():
     hy_obj.read_file(args.in_file,'envi')
 
     if hy_obj.wavelengths.max()< 1100:
-        new_waves = np.arange(400,991,10)
+        new_waves = np.arange(410,991,10)
     else:
-        new_waves = np.arange(400,2451,10)
+        new_waves = np.arange(410,2451,10)
 
     bins = int(np.round(10/np.diff(hy_obj.wavelengths).mean()))
     agg_waves  = np.nanmean(view_as_blocks(hy_obj.wavelengths[:(hy_obj.bands//bins) * bins],
@@ -65,7 +66,7 @@ def main():
             print(iterator.current_line)
         line = iterator.read_next()[:,:(hy_obj.bands//bins) * bins]
         line  = np.nanmean(view_as_blocks(line,(1,bins,)),axis=(2,3))
-        interpolator = interp1d(agg_waves,line,fill_value = 'extrapolate', kind = 'cubic')
+        interpolator = interp1d(agg_waves,line,fill_value = 'extrapolate', kind = args.type)
         line = interpolator(new_waves)
         writer.write_line(line,iterator.current_line)
 
