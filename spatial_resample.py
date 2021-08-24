@@ -32,9 +32,8 @@ def rotate_coords(x_i,y_i,x_p,y_p,theta):
     return x_r,y_r
 
 def main():
-    ''' Perform a two-step spectral resampling to 10nm. First wavelengths are aggregated
-    to approximatley 10nm, then aggregated spectra a interpolated to exactly 10nm using a
-    cubic piecewise interpolator.
+    ''' Perform a two-step spatial resampling to 30m. First, pixels are aggregated and
+    averaged, next a nearest neighbor algorithm is used to resample images to 30m.
     '''
 
     parser = argparse.ArgumentParser()

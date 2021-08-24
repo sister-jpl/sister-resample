@@ -25,8 +25,8 @@ from skimage.util import view_as_blocks
 
 def main():
     ''' Perform a two-step spectral resampling to 10nm. First wavelengths are aggregated
-    to approximatley 10nm, then aggregated spectra a interpolated to exactly 10nm using a
-    cubic piecewise interpolator.
+    to approximateley 10nm, then aggregated spectra a interpolated to exactly 10nm using a
+    piecewise interpolator.
     '''
 
     parser = argparse.ArgumentParser()
