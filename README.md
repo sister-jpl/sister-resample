@@ -25,5 +25,5 @@ python spectral_resample.py input_image output_directory
 
 Optional arguments:
 
-- `--type`: Interpolator type [options](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html), default = linear
+- `--type`: Interpolator type [(options)](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html), default = linear
 - `--verbose`: default = False
