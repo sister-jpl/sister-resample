@@ -10,6 +10,8 @@ pip -r requirements.txt
 
 ## Use
 
+### Spatial resampler
+
 ```bash
 python spatial_resmaple.py input_image output_directory
 ```
@@ -18,6 +20,8 @@ Optional arguments:
 
 - `--pixel`: Pixel size, in map units, default = 30
 - `--verbose`: default = False
+
+### Spectral resampler
 
 ```bash
 python spectral_resample.py input_image output_directory
