@@ -23,6 +23,22 @@ import numpy as np
 from scipy.interpolate import interp1d
 from skimage.util import view_as_blocks
 
+def progbar(curr, total, full_progbar = 100):
+    '''Display progress bar.
+    Gist from:
+    https://gist.github.com/marzukr/3ca9e0a1b5881597ce0bcb7fb0adc549
+
+    Args:
+        curr (int, float): Current task level.
+        total (int, float): Task level at completion.
+        full_progbar (TYPE): Defaults to 100.
+    Returns:
+        None.
+    '''
+    frac = curr/total
+    filled_progbar = round(frac*full_progbar)
+    print('\r', '#'*filled_progbar + '-'*(full_progbar-filled_progbar), '[{:>7.2%}]'.format(frac), end='')
+
 def main():
     ''' Perform a two-step spectral resampling to 10nm. First wavelengths are aggregated
     to approximateley 10nm, then aggregated spectra a interpolated to exactly 10nm using a
@@ -35,6 +51,8 @@ def main():
     parser.add_argument('out_dir', type=str,
                          help='Output directory')
     parser.add_argument('--verbose', action='store_true')
+    parser.add_argument('--waves',type=str,
+                        default='auto')
     parser.add_argument('--kind',type=str, default='linear',
                         help='Interpolation type')
     args = parser.parse_args()
@@ -43,16 +61,21 @@ def main():
     image = htl.HyTools()
     image.read_file(args.in_file,'envi')
 
-    if image.wavelengths.max()< 1100:
-        new_waves = np.arange(410,991,10)
+    if args.waves == 'auto':
+        if image.wavelengths.max()< 1100:
+            new_waves = np.arange(410,991,10)
+        else:
+            new_waves = np.arange(410,2451,10)
     else:
-        new_waves = np.arange(410,2451,10)
+        start,end,spacing = [int(c) for c in args.waves.split('_')]
+        new_waves = np.arange(start,end+1,spacing)
+
 
     bins = int(np.round(10/np.diff(image.wavelengths).mean()))
     agg_waves  = np.nanmean(view_as_blocks(image.wavelengths[:(image.bands//bins) * bins],
                                            (bins,)),axis=1)
     if args.verbose:
-        print("Aggregating every: %s" % bins)
+        print("Aggregating every %s bands" % bins)
 
     out_header = image.get_header()
     out_header['bands'] = len(new_waves)
@@ -64,13 +87,15 @@ def main():
     iterator =image.iterate(by = 'line')
 
     while not iterator.complete:
-        if (iterator.current_line%100 == 0) and args.verbose:
-            print(iterator.current_line)
         line = iterator.read_next()[:,:(image.bands//bins) * bins]
         line  = np.nanmean(view_as_blocks(line,(1,bins,)),axis=(2,3))
         interpolator = interp1d(agg_waves,line,fill_value = 'extrapolate', kind = args.kind)
         line = interpolator(new_waves)
         writer.write_line(line,iterator.current_line)
+        if args.verbose:
+            progbar(iterator.current_line,image.lines, full_progbar = 100)
+
+    print('\n')
 
 
 if __name__ == "__main__":
