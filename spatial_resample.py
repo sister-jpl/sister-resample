@@ -37,29 +37,32 @@ def main():
     '''
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('in_file', type=str)
-    parser.add_argument('out_dir', type=str)
-    parser.add_argument('--pixel', type=int,default = 30)
+    parser.add_argument('in_file', type=str,
+                        help='Input image')
+    parser.add_argument('out_dir', type=str,
+                         help='Output directory')
+    parser.add_argument('--pixel', type=int,default = 30,
+                        help='Pixel size in map units')
     parser.add_argument('--verbose', action='store_true')
 
     args = parser.parse_args()
     out_pixel = args.pixel
 
     out_image = args.out_dir + '/' + os.path.basename(args.in_file) + "_%02dm" % args.pixel
-    hy_obj = htl.HyTools()
-    hy_obj.read_file(args.in_file,'envi')
+    image = htl.HyTools()
+    image.read_file(args.in_file,'envi')
 
-    x_ul = float(hy_obj.map_info[3])
-    y_ul = float(hy_obj.map_info[4])
-    pixel_res = float(hy_obj.map_info[5])
+    x_ul = float(image.map_info[3])
+    y_ul = float(image.map_info[4])
+    pixel_res = float(image.map_info[5])
 
-    if 'rotation' in hy_obj.map_info[-1]:
-        rotation = 360 + float(hy_obj.map_info[-1].split('=')[-1])
+    if 'rotation' in image.map_info[-1]:
+        rotation = 360 + float(image.map_info[-1].split('=')[-1])
     else:
         rotation = 0
 
     # Calculate rotated and unrotated coords
-    y_ind,x_ind = np.indices((hy_obj.lines,hy_obj.columns))
+    y_ind,x_ind = np.indices((image.lines,image.columns))
     y_rcoord = y_ul - y_ind*pixel_res
     x_rcoord = x_ul + x_ind*pixel_res
     if rotation != 0:
@@ -71,8 +74,8 @@ def main():
     if args.verbose:
         print("Aggregating every %s pixels" % bins)
 
-    lines =bins*(hy_obj.lines//bins)
-    columns =bins*(hy_obj.columns//bins)
+    lines =bins*(image.lines//bins)
+    columns =bins*(image.columns//bins)
 
     y_coord_bin = np.nanmean(view_as_blocks(y_coord[:lines,:columns],
                                      (bins,bins)),axis=(2,3))
@@ -106,7 +109,7 @@ def main():
     indices_int = np.unravel_index(indexes,x_coord_bin.shape)
     mask = dists.reshape(image_shape) >out_pixel
 
-    out_header = hy_obj.get_header()
+    out_header = image.get_header()
     out_header['lines'] = out_lines
     out_header['samples'] = out_columns
     out_header['map info'][3] = str(xmin)
@@ -114,21 +117,21 @@ def main():
     out_header['map info'][5:7] = out_pixel,out_pixel
     out_header['map info'][-1] ='rotation=0.0000'
     out_header['byte order'] = 0
-    out_header['data ignore value'] = hy_obj.no_data
+    out_header['data ignore value'] = image.no_data
 
     writer = WriteENVI(out_image,out_header)
-    iterator =hy_obj.iterate(by = 'band')
+    iterator =image.iterate(by = 'band')
 
     while not iterator.complete:
         if args.verbose &  (iterator.current_band%10 == 0):
-            print("%s/%s" % (iterator.current_band,hy_obj.bands))
+            print("%s/%s" % (iterator.current_band,image.bands))
         band = np.copy(iterator.read_next()).astype(float)
-        band[~hy_obj.mask['no_data']] = np.nan
+        band[~image.mask['no_data']] = np.nan
         band = np.nanmean(view_as_blocks(band[:lines,:columns],
                                      (bins,bins)),axis=(2,3))
         band = band[indices_int[0],indices_int[1]].reshape(image_shape)
-        band[mask]= hy_obj.no_data
-        band[np.isnan(band)]= hy_obj.no_data
+        band[mask]= image.no_data
+        band[np.isnan(band)]= image.no_data
         writer.write_band(band,iterator.current_band)
 
 

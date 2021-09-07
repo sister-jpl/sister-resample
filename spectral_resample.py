@@ -30,43 +30,45 @@ def main():
     '''
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('in_file', type=str)
-    parser.add_argument('out_dir', type=str)
+    parser.add_argument('in_file', type=str,
+                        help='Input image')
+    parser.add_argument('out_dir', type=str,
+                         help='Output directory')
     parser.add_argument('--verbose', action='store_true')
-    parser.add_argument('--type',type=str, default='linear')
-
+    parser.add_argument('--kind',type=str, default='linear',
+                        help='Interpolation type')
     args = parser.parse_args()
 
     out_image = args.out_dir + '/' + os.path.basename(args.in_file) + "_10nm"
-    hy_obj = htl.HyTools()
-    hy_obj.read_file(args.in_file,'envi')
+    image = htl.HyTools()
+    image.read_file(args.in_file,'envi')
 
-    if hy_obj.wavelengths.max()< 1100:
+    if image.wavelengths.max()< 1100:
         new_waves = np.arange(410,991,10)
     else:
         new_waves = np.arange(410,2451,10)
 
-    bins = int(np.round(10/np.diff(hy_obj.wavelengths).mean()))
-    agg_waves  = np.nanmean(view_as_blocks(hy_obj.wavelengths[:(hy_obj.bands//bins) * bins],
+    bins = int(np.round(10/np.diff(image.wavelengths).mean()))
+    agg_waves  = np.nanmean(view_as_blocks(image.wavelengths[:(image.bands//bins) * bins],
                                            (bins,)),axis=1)
     if args.verbose:
         print("Aggregating every: %s" % bins)
 
-    out_header = hy_obj.get_header()
+    out_header = image.get_header()
     out_header['bands'] = len(new_waves)
     out_header['wavelength'] = new_waves.tolist()
     out_header['fwhm'] = [10 for x in new_waves]
     out_header['default bands'] = []
 
     writer = WriteENVI(out_image,out_header)
-    iterator =hy_obj.iterate(by = 'line')
+    iterator =image.iterate(by = 'line')
 
     while not iterator.complete:
         if (iterator.current_line%100 == 0) and args.verbose:
             print(iterator.current_line)
-        line = iterator.read_next()[:,:(hy_obj.bands//bins) * bins]
+        line = iterator.read_next()[:,:(image.bands//bins) * bins]
         line  = np.nanmean(view_as_blocks(line,(1,bins,)),axis=(2,3))
-        interpolator = interp1d(agg_waves,line,fill_value = 'extrapolate', kind = args.type)
+        interpolator = interp1d(agg_waves,line,fill_value = 'extrapolate', kind = args.kind)
         line = interpolator(new_waves)
         writer.write_line(line,iterator.current_line)
 
