@@ -57,7 +57,7 @@ def main():
 
     for band_num in range(image.bands):
         band = np.copy(image.get_band(band_num))
-        if mask:
+        if args.mask:
             band[msk] = np.nan
         band = np.mean(view_as_blocks(band,
                              (args.agg,args.agg)),axis=(2,3))
