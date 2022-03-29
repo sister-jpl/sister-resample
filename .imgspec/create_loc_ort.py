@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
-import hytools_lite as htl
+import hytools_lite as ht
 from hytools_lite.io.envi import WriteENVI
 import numpy as np
 import sys
