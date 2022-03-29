@@ -22,6 +22,7 @@ from hytools_lite.io.envi import WriteENVI
 import numpy as np
 from skimage.util import view_as_blocks
 from scipy.spatial import cKDTree
+from scipy.stats import circmean
 
 def rotate_coords(x_i,y_i,x_p,y_p,theta):
     '''Rotate coordinates (xi,yi) theta degrees around point (xp,yp)
@@ -32,8 +33,8 @@ def rotate_coords(x_i,y_i,x_p,y_p,theta):
     return x_r,y_r
 
 def main():
-    ''' Perform a two-step spatial resampling to 30m. First, pixels are aggregated and
-    averaged, next a nearest neighbor algorithm is used to resample images to 30m.
+    ''' Perform a two-step spatial resampling to . First, pixels are aggregated and
+    averaged, next a nearest neighbor algorithm is used to resample images to resolution.
     '''
 
     parser = argparse.ArgumentParser()
@@ -70,17 +71,17 @@ def main():
     else:
         x_coord,y_coord = x_rcoord,y_rcoord
 
-    bins = int(np.round(out_pixel/pixel_res))
+    bin_size = int(np.round(out_pixel/pixel_res))
     if args.verbose:
-        print("Aggregating every %s pixels" % bins)
+        print("Aggregating every %s pixels" % bin_size)
 
-    lines =bins*(image.lines//bins)
-    columns =bins*(image.columns//bins)
+    lines =bin_size*(image.lines//bin_size)
+    columns =bin_size*(image.columns//bin_size)
 
     y_coord_bin = np.nanmean(view_as_blocks(y_coord[:lines,:columns],
-                                     (bins,bins)),axis=(2,3))
+                                     (bin_size,bin_size)),axis=(2,3))
     x_coord_bin= np.nanmean(view_as_blocks(x_coord[:lines,:columns],
-                                     (bins,bins)),axis=(2,3))
+                                     (bin_size,bin_size)),axis=(2,3))
 
     # Get extent of output array
     xmax = int(out_pixel * (x_coord_bin.max()//out_pixel)) + out_pixel
@@ -127,8 +128,16 @@ def main():
             print("%s/%s" % (iterator.current_band,image.bands))
         band = np.copy(iterator.read_next()).astype(float)
         band[~image.mask['no_data']] = np.nan
-        band = np.nanmean(view_as_blocks(band[:lines,:columns],
-                                     (bins,bins)),axis=(2,3))
+        bins  = view_as_blocks(band[:lines,:columns],(bin_size,bin_size))
+
+        if (iterator.current_band in [1,3,7]) and ('obs' in image.base_name):
+            bins = np.radians(bins)
+            band = circmean(bins,axis=2,nan_policy = 'omit')
+            band = circmean(band,axis=2,nan_policy = 'omit')
+            band = np.degrees(band)
+        else:
+            band = np.nanmean(bins,axis=(2,3))
+
         band = band[indices_int[0],indices_int[1]].reshape(image_shape)
         band[mask]= image.no_data
         band[np.isnan(band)]= image.no_data
