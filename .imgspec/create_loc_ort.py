@@ -62,7 +62,6 @@ def main():
     writer.write_band(lon_proj,0)
     writer.write_band(lat_proj,1)
     writer.write_band(elv_proj,2)
-    print(output_file)
 
 if __name__ == "__main__":
     main()
