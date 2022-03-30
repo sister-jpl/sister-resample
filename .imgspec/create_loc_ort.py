@@ -15,13 +15,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import os
+import sys
 import hytools_lite as ht
 from hytools_lite.io.envi import WriteENVI
 import numpy as np
-import sys
 
 def main():
+    '''
+    Project location file using the geometry lookup table (GLT).
+
+    This function takes a single argurment, the pathname to the location file, and
+    assumes the GLT and LOC image are located in the same folder and use the same
+    file naming convention.
+
+    The projected location file is written to the same directory as the
+    input file.
+
+    '''
 
     loc_file =sys.argv[1]
     loc = ht.HyTools()
