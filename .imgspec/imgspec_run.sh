@@ -1,6 +1,6 @@
 imgspec_dir=$(cd "$(dirname "$0")" ; pwd -P)
 pge_dir=$(dirname ${imgspec_dir})
-echo $pge_dir
+
 mkdir output
 
 for a in `python get_paths_from_granules.py`; 
@@ -14,5 +14,5 @@ for a in `python get_paths_from_granules.py`;
       else
          python ${pge_dir}/spatial_resample.py $a output --verbose;
       fi
-done
+  done
 
