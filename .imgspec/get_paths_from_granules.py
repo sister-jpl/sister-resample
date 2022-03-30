@@ -1,20 +1,11 @@
-import argparse
 import glob
 import os
-import sys
-import tarfile
 
 
 def main():
 
     # Unzip and untar granules
     input_dir = "input"
-    granule_paths = glob.glob(os.path.join(input_dir, "*.tar.gz"))
-    for g in granule_paths:
-        tar_file = tarfile.open(g)
-        tar_file.extractall(input_dir)
-        tar_file.close()
-        #os.remove(g)
 
     dirs = [d for d in os.listdir(input_dir) if os.path.isdir(os.path.join(input_dir, d))]
     instrument = "PRISMA" if dirs[0][:3] == "PRS" else "AVIRIS"
