@@ -3,9 +3,12 @@ pge_dir=$(dirname ${imgspec_dir})
 
 mkdir output
 tar_file=$(ls input/*tar.gz)
-
+#echo $tar_file
 base=$(basename $tar_file)
+#echo $base
 output_dir=output/${base%.tar.gz}
+#echo $output_dir
+mkdir $output_dir
 
 tar -xzvf $tar_file -C input
 
