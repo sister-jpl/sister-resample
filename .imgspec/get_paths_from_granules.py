@@ -20,7 +20,8 @@ def main():
         paths+= glob.glob(os.path.join(input_dir, "*rdn*", "*rdn*img"))
         paths+= glob.glob(os.path.join(input_dir, "*rdn*", "*obs_ort"))
         paths+= glob.glob(os.path.join(input_dir, "*rdn*", "*loc"))
-        paths+= glob.glob(os.path.join(input_dir, "*rfl*", "*rfl"))
+        paths+= glob.glob(os.path.join(input_dir, "*rfl*", "*rfl")
+        paths+= glob.glob(os.path.join(input_dir, "*rfl*", "*corr*img"))
 
     for path in paths:
         print(path)
