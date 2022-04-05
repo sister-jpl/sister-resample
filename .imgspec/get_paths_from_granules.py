@@ -17,14 +17,17 @@ def main():
         paths+= glob.glob(os.path.join(input_dir, "*", "*rfl_prj"))
 
     elif instrument == "AVIRIS":
-        paths+= glob.glob(os.path.join(input_dir, "*rdn*", "*rdn*img"))
-        paths+= glob.glob(os.path.join(input_dir, "*rdn*", "*obs_ort"))
-        paths+= glob.glob(os.path.join(input_dir, "*rdn*", "*loc"))
-        paths+= glob.glob(os.path.join(input_dir, "*rfl*", "*rfl")
-        paths+= glob.glob(os.path.join(input_dir, "*rfl*", "*corr*img"))
+        paths+= glob.glob(os.path.join(input_dir, "*", "*_ort_img"))
+        paths+= glob.glob(os.path.join(input_dir, "*", "*_img"))
+        paths+= glob.glob(os.path.join(input_dir, "*", "*obs_ort"))
+        paths+= glob.glob(os.path.join(input_dir, "*", "*loc"))
+        paths+= glob.glob(os.path.join(input_dir, "*", "*_ort_igm"))
+        paths+= glob.glob(os.path.join(input_dir, "*", "*rfl*"))
+        paths+= glob.glob(os.path.join(input_dir, "*", "*corr*img"))
 
     for path in paths:
-        print(path)
+        if not path.endswith('.hdr'):
+            print(path)
 
 if __name__ == "__main__":
     main()

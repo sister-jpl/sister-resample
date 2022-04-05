@@ -37,7 +37,7 @@ def main():
     loc = ht.HyTools()
     loc.read_file(loc_file,'envi')
 
-    glt_file =  loc_file.replace('loc','glt')
+    glt_file =  loc_file.replace(loc_file[-3:],'glt')
     glt = ht.HyTools()
     glt.read_file(glt_file,'envi')
 
@@ -62,16 +62,19 @@ def main():
     elv_proj[samples ==0] = -9999
 
     # Create output file
-    output_file = loc.file_name+'_ort'
+
     header_dict =glt.get_header()
     header_dict['bands'] = 3
     header_dict['data type'] = 4
     header_dict['band names'] = loc.get_header()['band names']
     header_dict['description'] = loc.get_header()['description']
+    output_file = loc.file_name.replace('igm','loc')+'_ort'
     writer = WriteENVI(output_file,header_dict)
     writer.write_band(lon_proj,0)
     writer.write_band(lat_proj,1)
     writer.write_band(elv_proj,2)
+
+    print(output_file)
 
 if __name__ == "__main__":
     main()

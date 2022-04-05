@@ -12,12 +12,12 @@ mkdir output/$output_dir
 
 tar -xzvf $tar_file -C input
 
-for a in `python get_paths_from_granules.py`; 
-   do 
-      if [[ $a == *"loc"* ]]; then
+for a in `python get_paths_from_granules.py`;
+   do
+      if [[($a == *"loc"*) || ($a == *"ort_igm"*)]]; then
          echo 'Orthocorrecting loc file'
-         python ${imgspec_dir}/create_loc_ort.py $a
-         python ${pge_dir}/spatial_resample.py "${a}_ort" output/$output_dir --verbose;
+         loc_file=`python ${imgspec_dir}/create_loc_ort.py $a`
+         python ${pge_dir}/spatial_resample.py $loc_file output/$output_dir --verbose;
       elif [[ $a == *"rfl"* ]]; then
          python ${pge_dir}/spectral_resample.py $a output/$output_dir --verbose;
       else
