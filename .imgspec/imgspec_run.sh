@@ -10,6 +10,8 @@ output_dir=${base%.tar.gz}
 #echo $output_dir
 mkdir output/$output_dir
 
+yes | pip install -r ../requirements.txt
+
 tar -xzvf $tar_file -C input
 
 for a in `python get_paths_from_granules.py`;
