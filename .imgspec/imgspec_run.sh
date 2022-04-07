@@ -14,7 +14,7 @@ yes | pip install -r ../requirements.txt
 
 tar -xzvf $tar_file -C input
 
-for a in `python get_paths_from_granules.py`;
+for a in `python ${imgspec_dir}/get_paths_from_granules.py`;
    do
       if [[($a == *"loc"*) || ($a == *"ort_igm"*)]]; then
          echo 'Orthocorrecting loc file'
