@@ -10,8 +10,6 @@ output_dir=${base%.tar.gz}
 #echo $output_dir
 mkdir output/$output_dir
 
-yes | pip install -r ${pge_dir}/requirements.txt
-
 tar -xzvf $tar_file -C input
 
 for a in `python ${imgspec_dir}/get_paths_from_granules.py`;
