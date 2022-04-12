@@ -3,12 +3,13 @@ pge_dir=$(dirname ${imgspec_dir})
 
 mkdir output
 tar_file=$(ls input/*tar.gz)
-#echo $tar_file
 base=$(basename $tar_file)
-#echo $base
 output_dir=${base%.tar.gz}
-#echo $output_dir
 mkdir output/$output_dir
+
+source activate base
+conda install -c conda-forge numpy scipy scikit-image
+pip install --user hy-tools-lite
 
 tar -xzvf $tar_file -C input
 
