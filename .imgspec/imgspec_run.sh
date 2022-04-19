@@ -21,8 +21,8 @@ for a in `python ${imgspec_dir}/get_paths_from_granules.py`;
          echo 'Orthocorrecting loc file'
          loc_file=`python ${imgspec_dir}/create_loc_ort.py $a`
          python ${pge_dir}/spatial_resample.py $loc_file output/$output_dir --verbose;
-      elif [[ $a == *"rfl"* ]]; then
-         python ${pge_dir}/spectral_resample.py $a output/$output_dir --verbose;
+      elif [[($a == *"rfl"*) || ($a == *"corr"*)]]; then
+         python ${pge_dir}/spectral_resample.py $a output/$output_dir;
       else
          python ${pge_dir}/spatial_resample.py $a output/$output_dir --verbose;
       fi

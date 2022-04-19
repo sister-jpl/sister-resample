@@ -23,10 +23,12 @@ def main():
         paths+= glob.glob(os.path.join(input_dir, "*", "*loc"))
         paths+= glob.glob(os.path.join(input_dir, "*", "*_ort_igm"))
         paths+= glob.glob(os.path.join(input_dir, "*", "*rfl*"))
-        paths+= glob.glob(os.path.join(input_dir, "*", "*corr*img"))
+        paths+= glob.glob(os.path.join(input_dir, "*", "*_corr_*img"))
+        paths+= glob.glob(os.path.join(input_dir, "*", "*corr*"))
 
+    paths = set(paths)
     for path in paths:
-        if not path.endswith('.hdr'):
+        if not path.endswith('.hdr') and ('h2o' not in path):
             print(path)
 
 if __name__ == "__main__":
