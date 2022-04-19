@@ -10,7 +10,7 @@ output_dir=${base%.tar.gz}
 mkdir output/$output_dir
 
 source activate base
-conda install -c conda-forge numpy scipy scikit-image
+conda install -yc conda-forge numpy scipy scikit-image
 pip install --user hy-tools-lite
 
 tar -xzvf $tar_file -C input
