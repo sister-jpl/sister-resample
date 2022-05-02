@@ -1,30 +1,42 @@
+set -E
+
 imgspec_dir=$(cd "$(dirname "$0")" ; pwd -P)
 pge_dir=$(dirname ${imgspec_dir})
 
 mkdir output
 tar_file=$(ls input/*tar.gz)
-#echo $tar_file
 base=$(basename $tar_file)
-#echo $base
-output_dir=${base%.tar.gz}
-#echo $output_dir
-mkdir output/$output_dir
+scene_id=${base%.tar.gz}
+
+if  [[ $scene_id == "ang"* ]]; then
+    out_dir=$(echo $scene_id | cut -c1-18)
+elif [[ $scene_id == "PRS"* ]]; then
+    out_dir=$(echo $scene_id | cut -c1-38)
+elif [[ $scene_id == "f"* ]]; then
+    out_dir=$(echo $scene_id | cut -c1-16)
+fi
+
+mkdir output/$out_dir
+
+source activate base
+conda install -yc conda-forge numpy scipy scikit-image
+pip install --user hy-tools-lite
 
 tar -xzvf $tar_file -C input
 
-for a in `python get_paths_from_granules.py`;
+for a in `python ${imgspec_dir}/get_paths_from_granules.py`;
    do
       if [[($a == *"loc"*) || ($a == *"ort_igm"*)]]; then
          echo 'Orthocorrecting loc file'
          loc_file=`python ${imgspec_dir}/create_loc_ort.py $a`
-         python ${pge_dir}/spatial_resample.py $loc_file output/$output_dir --verbose;
-      elif [[ $a == *"rfl"* ]]; then
-         python ${pge_dir}/spectral_resample.py $a output/$output_dir --verbose;
+         python ${pge_dir}/spatial_resample.py $loc_file output/$out_dir --verbose;
+      elif [[($a == *"rfl"*) || ($a == *"corr"*)]]; then
+         python ${pge_dir}/spectral_resample.py $a output/$out_dir;
       else
-         python ${pge_dir}/spatial_resample.py $a output/$output_dir --verbose;
+         python ${pge_dir}/spatial_resample.py $a output/$out_dir --verbose;
       fi
   done
 
 cd output
-tar -czvf $output_dir.tar.gz $output_dir
-rm -r $output_dir
+tar -czvf $out_dir.tar.gz $out_dir
+rm -r $out_dir

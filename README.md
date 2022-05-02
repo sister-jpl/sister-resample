@@ -5,7 +5,7 @@ resolutions.
 ## Installation
 
 ```bash
-pip -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Use

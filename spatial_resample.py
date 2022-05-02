@@ -49,7 +49,7 @@ def main():
     args = parser.parse_args()
     out_pixel = args.pixel
 
-    out_image = args.out_dir + '/' + os.path.basename(args.in_file) + "_%02dm" % args.pixel
+    out_image = args.out_dir + '/' + os.path.basename(args.in_file)
     image = htl.HyTools()
     image.read_file(args.in_file,'envi')
 
