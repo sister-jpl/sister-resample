@@ -28,6 +28,6 @@ tar -xzvf $tar_file -C input
 python ${pge_dir}/spectral_resample.py input/*/*rfl output/$out_dir --verbose
 python ${pge_dir}/spectral_resample.py input/*/*uncert output/$out_dir --verbose
 
-#cd output
-#tar -czvf ${out_dir}.tar.gz $out_dir
-#rm -r $out_dir
+cd output
+tar -czvf ${out_dir}.tar.gz $out_dir
+rm -r $out_dir
