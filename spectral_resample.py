@@ -53,23 +53,22 @@ def main():
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--waves',type=str,
                         default='auto')
-    parser.add_argument('--kind',type=str, default='linear',
+    parser.add_argument('--kind',type=str, default='cubic',
                         help='Interpolation type')
     args = parser.parse_args()
 
-    out_image = args.out_dir + '/' + os.path.basename(args.in_file) + "_10nm"
+    out_image = args.out_dir + '/' + os.path.basename(args.in_file)
     image = htl.HyTools()
     image.read_file(args.in_file,'envi')
 
     if args.waves == 'auto':
         if image.wavelengths.max()< 1100:
-            new_waves = np.arange(410,991,10)
+            new_waves = np.arange(400,991,10)
         else:
-            new_waves = np.arange(410,2451,10)
+            new_waves = np.arange(400,2501,10)
     else:
         start,end,spacing = [int(c) for c in args.waves.split('_')]
         new_waves = np.arange(start,end+1,spacing)
-
 
     bins = int(np.round(10/np.diff(image.wavelengths).mean()))
     agg_waves  = np.nanmean(view_as_blocks(image.wavelengths[:(image.bands//bins) * bins],
