@@ -2,6 +2,8 @@
 
 set -E
 
+source activate sister
+
 imgspec_dir=$(cd "$(dirname "$0")" ; pwd -P)
 pge_dir=$(dirname ${imgspec_dir})
 
