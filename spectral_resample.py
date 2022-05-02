@@ -73,13 +73,16 @@ def main():
     bins = int(np.round(10/np.diff(image.wavelengths).mean()))
     agg_waves  = np.nanmean(view_as_blocks(image.wavelengths[:(image.bands//bins) * bins],
                                            (bins,)),axis=1)
+    agg_fwhm  = np.nanmean(view_as_blocks(image.fwhm[:(image.bands//bins) * bins],
+                                           (bins,)),axis=1)
+
     if args.verbose:
         print("Aggregating every %s bands" % bins)
 
     out_header = image.get_header()
     out_header['bands'] = len(new_waves)
     out_header['wavelength'] = new_waves.tolist()
-    out_header['fwhm'] = [10 for x in new_waves]
+    out_header['fwhm'] = fwhm.tolist()
     out_header['default bands'] = []
 
     writer = WriteENVI(out_image,out_header)
