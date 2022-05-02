@@ -97,8 +97,5 @@ def main():
         if args.verbose:
             progbar(iterator.current_line,image.lines, full_progbar = 100)
 
-    print('\n')
-
-
 if __name__ == "__main__":
     main()
