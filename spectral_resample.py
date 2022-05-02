@@ -82,7 +82,7 @@ def main():
     out_header = image.get_header()
     out_header['bands'] = len(new_waves)
     out_header['wavelength'] = new_waves.tolist()
-    out_header['fwhm'] = fwhm.tolist()
+    out_header['fwhm'] = agg_fwhm.tolist()
     out_header['default bands'] = []
 
     writer = WriteENVI(out_image,out_header)
