@@ -76,7 +76,7 @@ def main():
     agg_fwhm  = np.nanmean(view_as_blocks(image.fwhm[:(image.bands//bins) * bins],
                                            (bins,)),axis=1)
 
-    print(image.file.base_name)
+    print(image.base_name)
     print("Aggregating every %s bands" % bins)
 
     out_header = image.get_header()
