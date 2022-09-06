@@ -16,7 +16,7 @@ In addition to required MAAP job submission arguments the L2A spectral resamplin
 
 |Argument| Type |  Description | Default|
 |---|---|---|---|
-| isofit_granule| string |URL to input L2a ISOFIT dataset granule| -|
+| isofit_granule| string |L2A ISOFIT dataset granule URL| -|
 
 
 ## Outputs
@@ -25,12 +25,12 @@ The L2A spectral resampling PGE exports 2 ENVI formatted datacubes along with th
 
     INSTRUMENT_YYYYMMDDTHHMMSS_L2A_SUBPRODUCT_VERSION
 
-|Output file| Description |  Units |
-|---|---|---|
-| RSRFL| ENVI 10nm reflectance datacube | % |
-| RSRFL  .hdr| ENVI 10nm reflectance header file  | - |
-| RSUNC| ENVI 10nm uncertainty datacube | - |
-| RSUNC  .hdr| ENVI 10nm uncertainty header file  | - |
+|Output file| Description |  Units | Example filename |
+|---|---|---|---|
+| RSRFL| ENVI 10nm reflectance datacube | % | AVNG\_20220502T180901\_L2A\_RSRFL_001|
+| | ENVI 10nm reflectance header file  | - | AVNG\_20220502T180901\_L2A\_RSRFL_001.hdr|
+| RSUNC| ENVI 10nm uncertainty datacube | - | AVNG\_20220502T180901\_L2A\_RSUNC_001|
+| | ENVI 10nm uncertainty header file  | - | AVNG\_20220502T180901\_L2A\_RSUNC_001.hdr|
 
 
 All outputs of the PGE are compressed into a single tar.gz file using the following naming structure:
@@ -39,7 +39,7 @@ All outputs of the PGE are compressed into a single tar.gz file using the follow
  	 	
 for example:
 
-		AVNG_20220502T180901_L2A_RSRFL_100.tar.gz
+		AVNG_20220502T180901_L2A_RSRFL_001.tar.gz
 
 ## Example
 	
