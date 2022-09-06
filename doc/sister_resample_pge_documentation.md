@@ -11,7 +11,7 @@ to 10nm spectral spacing. Spectral resampling is performed in a two-step process
 
 ## PGE Arguments
 
-In addition to required MAAP job submission arguments the L1 preprocess PGE also takes the following argument(s):
+In addition to required MAAP job submission arguments the L2a spectral resampling PGE also takes the following argument(s):
 
 
 |Argument| Type |  Description | Default|
@@ -62,7 +62,7 @@ Header files follow the same naming convention with a .hdr appended to the end o
 	    publish_to_cmr=False,
 	    cmr_metadata={},
 	    queue="sister-job_worker-32gb",
-	    identifier='l2s_resample_AVNG_20170827T175432"
+	    identifier='l2a_resample_AVNG_20170827T175432"
 
  
  
