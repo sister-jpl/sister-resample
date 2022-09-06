@@ -2,7 +2,7 @@
 
 ## Description
 
-The L2a spectral resample PGE takes as input surface reflectance and uncertainty images and spectrally resamples the data
+The L2A spectral resample PGE takes as input surface reflectance and uncertainty images and spectrally resamples the data
 to 10nm spectral spacing. Spectral resampling is performed in a two-step process, first bands are aggregated and averaged to the closest resolution to the target resolution (10 nm). For example DESIS data, which has an average spectral spacing of 2.55 nm, is aggregated and averaged every 4 bands. Next a piecewise cubic interpolator is used to interpolate the spectra to the target wavelength spacing. Output range for all sensors except DESIS is 400-2500 nm, while the DESIS output range is 400-990 nm.
 
 ###
@@ -11,7 +11,7 @@ to 10nm spectral spacing. Spectral resampling is performed in a two-step process
 
 ## PGE Arguments
 
-In addition to required MAAP job submission arguments the L2a spectral resampling PGE also takes the following argument(s):
+In addition to required MAAP job submission arguments the L2A spectral resampling PGE also takes the following argument(s):
 
 
 |Argument| Type |  Description | Default|
@@ -21,7 +21,9 @@ In addition to required MAAP job submission arguments the L2a spectral resamplin
 
 ## Outputs
 
-The L2a spectral resampling PGE exports 2 ENVI formatted datacubes along with their associated header files. 
+The L2A spectral resampling PGE exports 2 ENVI formatted datacubes along with their associated header files. The outputs of the PGE use the following naming convention:
+
+    INSTRUMENT_YYYYMMDDTHHMMSS_L2A_SUBPRODUCT_VERSION
 
 |Output file| Description |  Units |
 |---|---|---|
@@ -30,28 +32,14 @@ The L2a spectral resampling PGE exports 2 ENVI formatted datacubes along with th
 | RSUNC| ENVI 10nm uncertainty datacube | - |
 | RSUNC  .hdr| ENVI 10nm uncertainty header file  | - |
 
-### Filenaming
----
 
-All outputs of the L2 atmospheric correction are compressed into a single tar.gz file using the following naming structure:
+All outputs of the PGE are compressed into a single tar.gz file using the following naming structure:
  
  	 	INSTRUMENT_YYYYMMDDTHHMMSS_L2A_RSRFL_VERSION.tar.gz
  	 	
 for example:
 
 		AVNG_20220502T180901_L2A_RSRFL_100.tar.gz
-
-The outputs of the PGE use the following naming convention: 
- 
-		INSTRUMENT_YYYYMMDDTHHMMSS_L2A_SUBPRODUCT_VERSION
-		
-| Subproduct code | Description |  Example | 
-| ---|---|---|
-| RSRFL | Resampled reflectance datacube | AVNG\_20220502T180901\_L1B\_RSRFL\_100 |
-| RSUNC | Resampled uncertainty datacube | AVNG\_20220502T180901\_L1B\_RSUNC\_100 |
-
-
-Header files follow the same naming convention with a .hdr appended to the end of the filename.
 
 ## Example
 	
