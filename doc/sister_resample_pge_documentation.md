@@ -1,0 +1,83 @@
+# SISTER L2A Spectral Resample PGE Documentation
+
+## Description
+
+The L2a spectral resample PGE takes as input surface reflectance and uncertainty images and spectrally resamples the data
+to 10nm spectral spacing. Spectral resampling is performed in a two-step process, first bands are aggregated and averaged to the closest resolution to the target resolution (10 nm). For example DESIS data, which has an average spectral spacing of 2.55 nm, is aggregated and averaged every 4 bands. Next a piecewise cubic interpolator is used to interpolate the spectra to the target wavelength spacing. Output range for all sensors except DESIS is 400-2500 nm, while the DESIS output range is 400-990 nm.
+
+###
+
+![DESIS spectral resampling example](./spectral_resample_example.png)
+
+## PGE Arguments
+
+In addition to required MAAP job submission arguments the L1 preprocess PGE also takes the following argument(s):
+
+
+|Argument| Type |  Description | Default|
+|---|---|---|---|
+| isofit_granule| string |URL to input L2a ISOFIT dataset granule| -|
+
+
+## Outputs
+
+The L2a spectral resampling PGE exports 2 ENVI formatted datacubes along with their associated header files. 
+
+|Output file| Description |  Units |
+|---|---|---|
+| RSRFL| ENVI 10nm reflectance datacube | % |
+| RSRFL  .hdr| ENVI 10nm reflectance header file  | - |
+| RSUNC| ENVI 10nm uncertainty datacube | - |
+| RSUNC  .hdr| ENVI 10nm uncertainty header file  | - |
+
+### Filenaming
+---
+
+All outputs of the L2 atmospheric correction are compressed into a single tar.gz file using the following naming structure:
+ 
+ 	 	INSTRUMENT_YYYYMMDDTHHMMSS_L2A_RSRFL_VERSION.tar.gz
+ 	 	
+for example:
+
+		AVNG_20220502T180901_L2A_RSRFL_100.tar.gz
+
+The outputs of the PGE use the following naming convention: 
+ 
+		INSTRUMENT_YYYYMMDDTHHMMSS_L2A_SUBPRODUCT_VERSION
+		
+| Subproduct code | Description |  Example | 
+| ---|---|---|
+| RSRFL | Resampled reflectance datacube | AVNG\_20220502T180901\_L1B\_RSRFL\_100 |
+| RSUNC | Resampled uncertainty datacube | AVNG\_20220502T180901\_L1B\_RSUNC\_100 |
+
+
+Header files follow the same naming convention with a .hdr appended to the end of the filename.
+
+## Example
+	
+	resample_job_response = maap.submitJob(
+	    algo_id="sister-resample",
+	    version="1.0.0",
+	    l2_granule= '../AVNG_20220502T180901_L2A_RFL_001.tar.gz',
+	    publish_to_cmr=False,
+	    cmr_metadata={},
+	    queue="sister-job_worker-32gb",
+	    identifier='l2s_resample_AVNG_20170827T175432"
+
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
