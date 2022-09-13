@@ -8,27 +8,24 @@ imgspec_dir=$(cd "$(dirname "$0")" ; pwd -P)
 pge_dir=$(dirname ${imgspec_dir})
 
 mkdir output
-tar_file=$(ls input/*tar.gz)
-base=$(basename $tar_file)
-scene_id=${base%.tar.gz}
 
-if  [[ $scene_id == "ang"* ]]; then
-    out_dir=$(echo $scene_id | cut -c1-18)_rfl
-elif [[ $scene_id == "PRS"* ]]; then
-    out_dir=$(echo $scene_id | cut -c1-38)_rfl
-elif [[ $scene_id == "f"* ]]; then
-    out_dir=$(echo $scene_id | cut -c1-16)_rfl
-elif [[ $scene_id == "DESIS"* ]]; then
-    out_dir=$(echo $scene_id | cut -c1-44)_rfl
-fi
+tar -xzvf input/*.tar.gz -C input
 
-mkdir output/$out_dir
+rfl_path=$(ls input/*/*RFL* | grep -v '.hdr')
+unc_path=$(ls input/*/*UNC* | grep -v '.hdr')
 
-tar -xzvf $tar_file -C input
+# Create output directory
+rfl_name=$(basename $rfl_path)
+output_base_name=$(echo "${rdn_name/L2A_RFL/"L2A_RSRFL"}")
+mkdir output/$output_base_name
 
 # Resample uncertainty and reflectance
-python ${pge_dir}/spectral_resample.py input/*/*rfl output/$out_dir
-python ${pge_dir}/spectral_resample.py input/*/*uncert output/$out_dir
+python ${pge_dir}/spectral_resample.py $rfl_path output/$output_base_name
+python ${pge_dir}/spectral_resample.py $unc_path output/$output_base_name
+
+
+#Rename, compress and cleanup outputs
+
 cd output
-tar -czvf ${out_dir}.tar.gz $out_dir
-rm -r $out_dir
+tar -czvf ${output_base_name}.tar.gz $output_base_name
+rm -r $output_base_name
