@@ -7,7 +7,7 @@ to 10nm spectral spacing. Spectral resampling is performed in a two-step process
 
 ###
 
-![DESIS spectral resampling example](./spectral_resample_example.png)
+![DESIS spectral resampling example](./figures/spectral_resample_example.png)
 
 ## PGE Arguments
 
