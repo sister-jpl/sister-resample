@@ -23,23 +23,23 @@ In addition to required MAAP job submission arguments the L2A spectral resamplin
 
 The L2A spectral resampling PGE exports 2 ENVI formatted datacubes along with their associated header files. The outputs of the PGE use the following naming convention:
 
-    INSTRUMENT_YYYYMMDDTHHMMSS_L2A_SUBPRODUCT_VERSION
+    SISTER_INSTRUMENT_YYYYMMDDTHHMMSS_L2A_SUBPRODUCT_VERSION
 
 |Subproduct| Description |  Units | Example filename |
 |---|---|---|---|
-| RSRFL| ENVI 10nm reflectance datacube | % | AVNG\_20220502T180901\_L2A\_RSRFL_001|
-| | ENVI 10nm reflectance header file  | - | AVNG\_20220502T180901\_L2A\_RSRFL_001.hdr|
-| RSUNC| ENVI 10nm uncertainty datacube | - | AVNG\_20220502T180901\_L2A\_RSUNC_001|
-| | ENVI 10nm uncertainty header file  | - | AVNG\_20220502T180901\_L2A\_RSUNC_001.hdr|
+| RSRFL| ENVI 10nm reflectance datacube | % | SISTER_AVNG\_20220502T180901\_L2A\_RSRFL_001|
+| | ENVI 10nm reflectance header file  | - | SISTER_AVNG\_20220502T180901\_L2A\_RSRFL_001.hdr|
+| RSUNC| ENVI 10nm uncertainty datacube | - | SISTER_AVNG\_20220502T180901\_L2A\_RSUNC_001|
+| | ENVI 10nm uncertainty header file  | - | SISTER_AVNG\_20220502T180901\_L2A\_RSUNC_001.hdr|
 
 
 All outputs of the PGE are compressed into a single tar.gz file using the following naming structure:
 
- 	 	INSTRUMENT_YYYYMMDDTHHMMSS_L2A_RSRFL_VERSION.tar.gz
+ 	 	SISTER_INSTRUMENT_YYYYMMDDTHHMMSS_L2A_RSRFL_VERSION.tar.gz
 
 for example:
 
-		AVNG_20220502T180901_L2A_RSRFL_001.tar.gz
+		SISTER_AVNG_20220502T180901_L2A_RSRFL_001.tar.gz
 
 ## Example
 
