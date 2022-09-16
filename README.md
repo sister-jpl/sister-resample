@@ -1,4 +1,4 @@
-# SISTER L2A Spectral Resample PGE Documentation
+# SISTER Spectral Resample PGE Documentation
 
 ## Description
 
