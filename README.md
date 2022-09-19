@@ -44,7 +44,7 @@ for example:
 	resample_job_response = maap.submitJob(
 	    algo_id="sister-resample",
 	    version="1.0.0",
-	    l2_granule= '../AVNG_20220502T180901_L2A_RFL_001.tar.gz',
+	    l2a_granule= '../AVNG_20220502T180901_L2A_RFL_001.tar.gz',
 	    publish_to_cmr=False,
 	    cmr_metadata={},
 	    queue="sister-job_worker-32gb",
