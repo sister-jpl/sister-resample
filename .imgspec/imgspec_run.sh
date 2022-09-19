@@ -9,7 +9,7 @@ pge_dir=$(dirname ${imgspec_dir})
 
 mkdir output
 
-#tar -xzvf input/*.tar.gz -C input
+tar -xzvf input/*.tar.gz -C input
 
 rfl_path=$(ls input/*/*RFL* | grep -v '.hdr\|.log')
 unc_path=$(ls input/*/*UNC* | grep -v '.hdr')
