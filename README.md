@@ -5,8 +5,6 @@
 The L2A spectral resample PGE takes as input surface reflectance and uncertainty images and spectrally resamples the data
 to 10nm spectral spacing. Spectral resampling is performed in a two-step process, first bands are aggregated and averaged to the closest resolution to the target resolution (10 nm). For example DESIS data, which has an average spectral spacing of 2.55 nm, is aggregated and averaged every 4 bands. Next a piecewise cubic interpolator is used to interpolate the spectra to the target wavelength spacing. Output range for all sensors except DESIS is 400-2500 nm, while the DESIS output range is 400-990 nm.
 
-###
-
 ![DESIS spectral resampling example](./figures/spectral_resample_example.png)
 
 ## PGE Arguments
@@ -16,7 +14,7 @@ In addition to required MAAP job submission arguments the L2A spectral resamplin
 
 |Argument| Type |  Description | Default|
 |---|---|---|---|
-| isofit_granule| string |L2A ISOFIT dataset granule URL| -|
+| l2a_granule| string |L2A ISOFIT dataset granule URL| -|
 
 
 ## Outputs
@@ -50,4 +48,4 @@ for example:
 	    publish_to_cmr=False,
 	    cmr_metadata={},
 	    queue="sister-job_worker-32gb",
-	    identifier='l2a_resample_AVNG_20170827T175432"
+	    identifier='SISTER_AVNG_20170827T175432_L2A_RSRFL_001"
