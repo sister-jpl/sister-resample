@@ -1,5 +1,5 @@
 # sister-cloudmask dependencies
-hy-tools-lite
-numpy
-scipy
-scikit-image
+hy-tools-lite==1.1.1
+scipy==1.9.1
+scikit-image==0.19.3
+Pillow==9.2.0
