@@ -35,8 +35,12 @@ mv */*_RFL* $output_base_name/$output_base_name
 mv */*_UNC*.hdr $output_base_name/$(echo "${output_base_name/RSRFL/"RSUNC"}").hdr
 mv */*_UNC* $output_base_name/$(echo "${output_base_name/RSRFL/"RSUNC"}")
 
-#Generate metadata
+#Create metadata
 python ${imgspec_dir}/generate_metadata.py */*RSRFL*.hdr .
+
+# Create quicklook
+python ${imgspec_dir}/generate_quicklook.py $(ls */*RSRFL* | grep -v '.hdr') .
+
 
 tar -czvf ${output_base_name}.tar.gz $output_base_name
 rm -r $output_base_name
