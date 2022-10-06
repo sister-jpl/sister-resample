@@ -1,4 +1,4 @@
-# sister-cloudmask dependencies
+# sister-resample dependencies
 hy-tools-lite==1.1.1
 scipy==1.9.1
 scikit-image==0.19.3
