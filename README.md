@@ -39,11 +39,37 @@ for example:
 
 		SISTER_AVNG_20220502T180901_L2A_RSRFL_001.tar.gz
 
+## Algorithm registration
+
+	from maap.maap import MAAP
+	maap = MAAP(maap_host="sister-api.imgspec.org")
+	
+	resample_alg = {
+	    "script_command": "sister-resample/.imgspec/imgspec_run.sh",
+	    "repo_url": "https://github.com/EnSpec/sister-resample.git",
+	    "algorithm_name":"1.1.0",
+	    "code_version":"sister-dev",
+	    "algorithm_description":"Spectrally resample reflectance and uncertainty images",
+	    "environment_name":"ubuntu",
+	    "disk_space":"50GB",
+	    "queue": "sister-job_worker-32gb",
+	    "build_command": "sister-resample/.imgspec/install.sh",
+	    "docker_container_url": docker_container_url,
+	    "algorithm_params":[
+	        {
+	            "field": "l2a_granule",
+	            "type": "file"
+	        }
+	    ]
+	}
+	
+	response = maap.registerAlgorithm(resample_alg)
+
 ## Example
 
 	resample_job_response = maap.submitJob(
 	    algo_id="sister-resample",
-	    version="1.0.0",
+	    version="1.1.0",
 	    l2a_granule= '../AVNG_20220502T180901_L2A_RFL_001.tar.gz',
 	    publish_to_cmr=False,
 	    cmr_metadata={},
