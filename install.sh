@@ -10,3 +10,6 @@ source activate sister
 cd $pge_dir
 python setup.py install
 
+git clone https://github.com/EnSpec/hytools.git
+cd hytools
+pip install .

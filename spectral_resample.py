@@ -15,29 +15,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import argparse
+import json
+import sys
 import os
-import hytools_lite as htl
-from hytools_lite.io.envi import WriteENVI
+import hytools as ht
+from hytools.io.envi import WriteENVI
 import numpy as np
 from scipy.interpolate import interp1d
 from skimage.util import view_as_blocks
-
-def progbar(curr, total, full_progbar = 100):
-    '''Display progress bar.
-    Gist from:
-    https://gist.github.com/marzukr/3ca9e0a1b5881597ce0bcb7fb0adc549
-
-    Args:
-        curr (int, float): Current task level.
-        total (int, float): Task level at completion.
-        full_progbar (TYPE): Defaults to 100.
-    Returns:
-        None.
-    '''
-    frac = curr/total
-    filled_progbar = round(frac*full_progbar)
-    print('\r', '#'*filled_progbar + '-'*(full_progbar-filled_progbar), '[{:>7.2%}]'.format(frac), end='')
+from PIL import Image
 
 def main():
     ''' Perform a two-step spectral resampling to 10nm. First wavelengths are aggregated
@@ -45,30 +31,65 @@ def main():
     piecewise interpolator.
     '''
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('in_file', type=str,
-                        help='Input image')
-    parser.add_argument('out_dir', type=str,
-                         help='Output directory')
-    parser.add_argument('--verbose', action='store_true')
-    parser.add_argument('--waves',type=str,
-                        default='auto')
-    parser.add_argument('--kind',type=str, default='cubic',
-                        help='Interpolation type')
-    args = parser.parse_args()
+    run_config_json = sys.argv[1]
 
-    out_image = args.out_dir + '/' + os.path.basename(args.in_file)
-    image = htl.HyTools()
-    image.read_file(args.in_file,'envi')
+    with open(run_config_json, 'r') as in_file:
+        run_config =json.load(in_file)
 
-    if args.waves == 'auto':
-        if image.wavelengths.max()< 1100:
-            new_waves = np.arange(400,991,10)
-        else:
-            new_waves = np.arange(400,2501,10)
+    os.mkdir('output')
+
+    base_name = os.path.basename(run_config['inputs']['l2a_granule'])
+
+    print ("Resampling reflectance")
+    rfl_file = f'input/{base_name}/{base_name}.bin'
+    rfl_out_file =  f'output/{base_name.replace("RFL","RSRFL")}.bin'
+    rfl_met = f'input/{base_name}/{base_name}.met.json'
+    rfl_out_met = rfl_out_file.replace('.bin','.met.json')
+
+    resample(rfl_file,rfl_out_file)
+
+    generate_metadata(rfl_met,rfl_out_met,
+                      {'product': 'RSRFL',
+                      'processing_level': 'L2A',
+                      'description' : '10nm resampled reflectance'})
+
+    generate_quicklook(rfl_out_file)
+
+
+    print ("Resampling uncertainty")
+    unc_file = f'input/{base_name}/{base_name}_UNC.bin'
+    unc_out_file = rfl_out_file.replace('.bin','_RSUNC.bin')
+    unc_met = f'input/{base_name}/{base_name}_UNC.met.json'
+    unc_out_met = unc_out_file.replace('.bin','.met.json')
+
+    resample(unc_file,unc_out_file)
+
+    generate_metadata(unc_met,unc_out_met,
+                      {'product': 'RSUNC',
+                      'processing_level': 'L2A',
+                      'description' : '10nm resampled uncertainty'})
+
+
+def generate_metadata(in_file,out_file,metadata):
+
+    with open(in_file, 'r') as in_obj:
+        in_met =json.load(in_obj)
+
+    for key,value in metadata.items():
+        in_met[key] = value
+
+    with open(out_file, 'w') as out_obj:
+        json.dump(in_met,out_obj,indent=3)
+
+def resample(in_file,out_file):
+
+    image = ht.HyTools()
+    image.read_file(in_file,'envi')
+
+    if image.wavelengths.max()< 1100:
+        new_waves = np.arange(400,991,10)
     else:
-        start,end,spacing = [int(c) for c in args.waves.split('_')]
-        new_waves = np.arange(start,end+1,spacing)
+        new_waves = np.arange(400,2501,10)
 
     bins = int(np.round(10/np.diff(image.wavelengths).mean()))
     agg_waves  = np.nanmean(view_as_blocks(image.wavelengths[:(image.bands//bins) * bins],
@@ -76,26 +97,52 @@ def main():
     agg_fwhm  = np.nanmean(view_as_blocks(image.fwhm[:(image.bands//bins) * bins],
                                            (bins,)),axis=1)
 
-    print(image.base_name)
-    print("Aggregating every %s bands" % bins)
+    print(f"Aggregating every {bins} bands")
 
     out_header = image.get_header()
     out_header['bands'] = len(new_waves)
     out_header['wavelength'] = new_waves.tolist()
-    out_header['fwhm'] = agg_fwhm.tolist()
+    out_header['fwhm'] = agg_fwhm
     out_header['default bands'] = []
 
-    writer = WriteENVI(out_image,out_header)
+    writer = WriteENVI(out_file,out_header)
     iterator =image.iterate(by = 'line')
 
     while not iterator.complete:
         line = iterator.read_next()[:,:(image.bands//bins) * bins]
         line  = np.nanmean(view_as_blocks(line,(1,bins,)),axis=(2,3))
-        interpolator = interp1d(agg_waves,line,fill_value = 'extrapolate', kind = args.kind)
+        interpolator = interp1d(agg_waves,line,fill_value = 'extrapolate', kind = 'cubic')
         line = interpolator(new_waves)
         writer.write_line(line,iterator.current_line)
-        if args.verbose:
-            progbar(iterator.current_line,image.lines, full_progbar = 100)
+
+
+def generate_quicklook(input_file):
+
+    img = ht.HyTools()
+    img.read_file(input_file)
+    image_file = input_file.replace('.bin','.png')
+
+    if 'DESIS' in img.base_name:
+        band3 = img.get_wave(560)
+        band2 = img.get_wave(850)
+        band1 = img.get_wave(660)
+    else:
+        band3 = img.get_wave(560)
+        band2 = img.get_wave(850)
+        band1 = img.get_wave(1660)
+
+    rgb=  np.stack([band1,band2,band3])
+    rgb[rgb == img.no_data] = np.nan
+
+    rgb = np.moveaxis(rgb,0,-1).astype(float)
+    bottom = np.nanpercentile(rgb,5,axis = (0,1))
+    top = np.nanpercentile(rgb,95,axis = (0,1))
+    rgb = np.clip(rgb,bottom,top)
+    rgb = (rgb-np.nanmin(rgb,axis=(0,1)))/(np.nanmax(rgb,axis= (0,1))-np.nanmin(rgb,axis= (0,1)))
+    rgb = (rgb*255).astype(np.uint8)
+
+    im = Image.fromarray(rgb)
+    im.save(image_file)
 
 if __name__ == "__main__":
     main()
