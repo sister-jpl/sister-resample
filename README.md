@@ -21,23 +21,18 @@ In addition to required MAAP job submission arguments the L2A spectral resamplin
 
 The L2A spectral resampling PGE exports 2 ENVI formatted datacubes along with their associated header files. The outputs of the PGE use the following naming convention:
 
-    SISTER_INSTRUMENT_YYYYMMDDTHHMMSS_L2A_SUBPRODUCT_VERSION
+    SISTER_<SENSOR>_L2A_RSRFL_<YYYYMMDDTHHMMSS>_CRID<_SUBPRODUCT>
+    
+Additionally, a false color quicklook PNG image is produced of the radiance image using wavelengths 560, 850 and 660 nm for DESIS and 560, 850, 1600 nm for all other sensors.
 
-|Subproduct| Description |  Units | Example filename |
+|Product name| Description |  Units | Example filename |
 |---|---|---|---|
-| RSRFL| ENVI 10nm reflectance datacube | % | SISTER_AVNG\_20220502T180901\_L2A\_RSRFL_001|
-| | ENVI 10nm reflectance header file  | - | SISTER_AVNG\_20220502T180901\_L2A\_RSRFL_001.hdr|
-| RSUNC| ENVI 10nm uncertainty datacube | - | SISTER_AVNG\_20220502T180901\_L2A\_RSUNC_001|
-| | ENVI 10nm uncertainty header file  | - | SISTER_AVNG\_20220502T180901\_L2A\_RSUNC_001.hdr|
+| \*RSRFL\*.bin| ENVI 10nm reflectance datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.bin|
+|  \*RSRFL\*.hdr| ENVI 10nm reflectance header file  | - | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.hdr|
+|  \*RSUNC\*.bin| ENVI 10nm uncertainty datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.bin|
+|  \*RSUNC\*.hdr| ENVI 10nm uncertainty header file  | - |SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.hdr|
+| *.png| 10nm reflectance quicklook | % | SISTER\_AVNG\_L2A\_RSRFL_20220502T180901\_001.png|
 
-
-All outputs of the PGE are compressed into a single tar.gz file using the following naming structure:
-
- 	 	SISTER_INSTRUMENT_YYYYMMDDTHHMMSS_L2A_RSRFL_VERSION.tar.gz
-
-for example:
-
-		SISTER_AVNG_20220502T180901_L2A_RSRFL_001.tar.gz
 
 ## Algorithm registration
 
@@ -45,20 +40,25 @@ for example:
 	maap = MAAP(maap_host="sister-api.imgspec.org")
 	
 	resample_alg = {
-	    "script_command": "sister-resample/.imgspec/imgspec_run.sh",
+	    "script_command": "sister-resample/pge_run.sh",
 	    "repo_url": "https://github.com/EnSpec/sister-resample.git",
-	    "algorithm_name":"1.1.0",
+	    "algorithm_name":"2.0.0",
 	    "code_version":"sister-dev",
 	    "algorithm_description":"Spectrally resample reflectance and uncertainty images",
 	    "environment_name":"ubuntu",
 	    "disk_space":"50GB",
-	    "queue": "sister-job_worker-32gb",
-	    "build_command": "sister-resample/.imgspec/install.sh",
+	    "queue": "sister-job_worker-16gb",
+	    "build_command": "sister-resample/install.sh",
 	    "docker_container_url": docker_container_url,
 	    "algorithm_params":[
 	        {
 	            "field": "l2a_granule",
 	            "type": "file"
+	        },
+	          {
+	            "field": "CRID",
+	            "type": "config",
+	            "default": "000"
 	        }
 	    ]
 	}
@@ -69,9 +69,10 @@ for example:
 
 	resample_job_response = maap.submitJob(
 	    algo_id="sister-resample",
-	    version="1.1.0",
+	    version="2.0.0",
 	    l2a_granule= '../AVNG_20220502T180901_L2A_RFL_001.tar.gz',
+	    CRID = '001'
 	    publish_to_cmr=False,
 	    cmr_metadata={},
-	    queue="sister-job_worker-32gb",
+	    queue="sister-job_worker-16gb",
 	    identifier='SISTER_AVNG_20170827T175432_L2A_RSRFL_001"
