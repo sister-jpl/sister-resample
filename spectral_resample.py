@@ -47,18 +47,17 @@ def main():
     generate_quicklook(rfl_out_file)
 
 
-    print ("Resampling uncertainty")
-    unc_file = f'input/{base_name}/{base_name}_UNC.bin'
-    unc_out_file = rfl_out_file.replace('.bin','_RSUNC.bin')
-    unc_met = f'input/{base_name}/{base_name}_UNC.met.json'
-    unc_out_met = unc_out_file.replace('.bin','.met.json')
+    # print ("Resampling uncertainty")
+    # unc_file = f'input/{base_name}/{base_name}_UNC.bin'
+    # unc_out_file = rfl_out_file.replace('.bin','_RSUNC.bin')
+    # unc_met = f'input/{base_name}/{base_name}_UNC.met.json'
+    # unc_out_met = unc_out_file.replace('.bin','.met.json')
+    # resample(unc_file,unc_out_file)
 
-    resample(unc_file,unc_out_file)
-
-    generate_metadata(unc_met,unc_out_met,
-                      {'product': 'RSUNC',
-                      'processing_level': 'L2A',
-                      'description' : '10nm resampled uncertainty'})
+    # generate_metadata(unc_met,unc_out_met,
+    #                   {'product': 'RSUNC',
+    #                   'processing_level': 'L2A',
+    #                   'description' : '10nm resampled uncertainty'})
 
 
 def generate_metadata(in_file,out_file,metadata):
