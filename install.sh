@@ -1,8 +1,6 @@
 #!/bin/bash
 
-run_dir=$('pwd')
-imgspec_dir=$(cd "$(dirname "$0")" ; pwd -P)
-pge_dir=$(dirname ${imgspec_dir})
+pge_dir=$(cd "$(dirname "$0")" ; pwd -P)
 
 # Need to do custom install to prevent dependency errors
 conda create -y --name sister python=3.8
