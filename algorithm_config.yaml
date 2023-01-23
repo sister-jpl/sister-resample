@@ -24,5 +24,5 @@ inputs:
   config:
     - name: CRID
       data_type:
-      default: 000
+      default: '000'
       description:
