@@ -7,6 +7,7 @@ Author: Adam Chlus
 """
 
 import json
+import shutil
 import sys
 import os
 import hytools as ht
@@ -29,35 +30,49 @@ def main():
 
     os.mkdir('output')
 
-    base_name = os.path.basename(run_config['inputs']['l2a_granule'])
-
     print ("Resampling reflectance")
-    rfl_file = f'input/{base_name}/{base_name}.bin'
-    rfl_out_file =  f'output/{base_name.replace("RFL","RSRFL")}.bin'
-    rfl_met = f'input/{base_name}/{base_name}.met.json'
-    rfl_out_met = rfl_out_file.replace('.bin','.met.json')
 
-    resample(rfl_file,rfl_out_file)
+    rfl_base_name = os.path.basename(run_config['inputs']['l2a_rfl'])
+    sister,sensor,level,product,datetime,crid = rfl_base_name.split('_')
+
+    rfl_file = f'input/{rfl_base_name}/{rfl_base_name}.bin'
+    rfl_met = rfl_file.replace('.bin','.met.json')
+
+    out_rfl_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{CRID}.bin'
+    out_rfl_met = out_rfl_file.replace('.bin','.met.json')
+
+    resample(rfl_file,out_rfl_file)
 
     generate_metadata(rfl_met,rfl_out_met,
                       {'product': 'RSRFL',
                       'processing_level': 'L2A',
                       'description' : '10nm resampled reflectance'})
-
     generate_quicklook(rfl_out_file)
 
 
-    # print ("Resampling uncertainty")
-    # unc_file = f'input/{base_name}/{base_name}_UNC.bin'
-    # unc_out_file = rfl_out_file.replace('.bin','_RSUNC.bin')
-    # unc_met = f'input/{base_name}/{base_name}_UNC.met.json'
-    # unc_out_met = unc_out_file.replace('.bin','.met.json')
-    # resample(unc_file,unc_out_file)
+    print ("Resampling uncertainty")
 
-    # generate_metadata(unc_met,unc_out_met,
-    #                   {'product': 'RSUNC',
-    #                   'processing_level': 'L2A',
-    #                   'description' : '10nm resampled uncertainty'})
+    unc_base_name = os.path.basename(run_config['inputs']['l2a_unc'])
+    sister,sensor,level,product,datetime,crid,subproduct = unc_base_name.split('_')
+
+    unc_file = f'input/{unc_base_name}/{unc_base_name}.bin'
+    unc_met = unc_file.replace('.bin','.met.json')
+
+    out_unc_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{CRID}_UNC.bin'
+    out_unc_met = out_unc_file.replace('.bin','.met.json')
+
+    resample(unc_file,out_unc_file)
+
+    generate_metadata(unc_met,out_unc_met,
+                      {'product': 'RSUNC',
+                      'processing_level': 'L2A',
+                      'description' : '10nm resampled uncertainty'})
+
+    shutil.copyfile(run_config_json,
+                    out_rfl_file.replace('.bin','.runconfig.json'))
+
+    shutil.copyfile('run.log',
+                    out_rfl_file.replace('.bin','.log'))
 
 
 def generate_metadata(in_file,out_file,metadata):
