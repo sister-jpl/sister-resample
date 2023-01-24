@@ -33,7 +33,7 @@ def main():
     print ("Resampling reflectance")
 
     rfl_base_name = os.path.basename(run_config['inputs']['l2a_rfl'])
-    sister,sensor,level,product,datetime,crid = rfl_base_name.split('_')
+    sister,sensor,level,product,datetime,CRID = rfl_base_name.split('_')
 
     rfl_file = f'input/{rfl_base_name}/{rfl_base_name}.bin'
     rfl_met = rfl_file.replace('.bin','.met.json')
@@ -43,12 +43,11 @@ def main():
 
     resample(rfl_file,out_rfl_file)
 
-    generate_metadata(rfl_met,rfl_out_met,
+    generate_metadata(rfl_met,out_rfl_met,
                       {'product': 'RSRFL',
                       'processing_level': 'L2A',
                       'description' : '10nm resampled reflectance'})
-    generate_quicklook(rfl_out_file)
-
+    generate_quicklook(out_rfl_file)
 
     print ("Resampling uncertainty")
 
