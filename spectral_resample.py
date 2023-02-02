@@ -32,13 +32,15 @@ def main():
 
     print ("Resampling reflectance")
 
-    rfl_base_name = os.path.basename(run_config['inputs']['l2a_rfl'])
-    sister,sensor,level,product,datetime,CRID = rfl_base_name.split('_')
+    rfl_base_name = os.path.basename(run_config['inputs']['reflectance_dataset'])
+    sister,sensor,level,product,datetime,in_crid = rfl_base_name.split('_')
+
+    crid = run_config['inputs']['crid']
 
     rfl_file = f'input/{rfl_base_name}/{rfl_base_name}.bin'
     rfl_met = rfl_file.replace('.bin','.met.json')
 
-    out_rfl_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{CRID}.bin'
+    out_rfl_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}.bin'
     out_rfl_met = out_rfl_file.replace('.bin','.met.json')
 
     resample(rfl_file,out_rfl_file)
@@ -51,13 +53,13 @@ def main():
 
     print ("Resampling uncertainty")
 
-    unc_base_name = os.path.basename(run_config['inputs']['l2a_unc'])
+    unc_base_name = os.path.basename(run_config['inputs']['uncertainty_dataset'])
     sister,sensor,level,product,datetime,crid,subproduct = unc_base_name.split('_')
 
     unc_file = f'input/{unc_base_name}/{unc_base_name}.bin'
     unc_met = unc_file.replace('.bin','.met.json')
 
-    out_unc_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{CRID}_UNC.bin'
+    out_unc_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}_UNC.bin'
     out_unc_met = out_unc_file.replace('.bin','.met.json')
 
     resample(unc_file,out_unc_file)
