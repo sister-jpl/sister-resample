@@ -14,7 +14,8 @@ In addition to required MAAP job submission arguments the L2A spectral resamplin
 
 |Argument| Type |  Description | Default|
 |---|---|---|---|
-| l2a_granule| string |L2A ISOFIT dataset granule URL| -|
+| reflectance_dataset| string |L2A ISOFIT dataset granule URL| -|
+| crid| string | Composite release identifier| 000|
 
 
 ## Outputs
@@ -36,42 +37,23 @@ Additionally, a false color quicklook PNG image is produced of the radiance imag
 
 ## Algorithm registration
 
+This algorithm can be registered using the algorirthm_config.yml file found in this repository:
+
 	from maap.maap import MAAP
+	import IPython
+	
 	maap = MAAP(maap_host="sister-api.imgspec.org")
-	
-	resample_alg = {
-	    "script_command": "sister-resample/pge_run.sh",
-	    "repo_url": "https://github.com/EnSpec/sister-resample.git",
-	    "algorithm_name":"2.0.0",
-	    "code_version":"sister-dev",
-	    "algorithm_description":"Spectrally resample reflectance and uncertainty images",
-	    "environment_name":"ubuntu",
-	    "disk_space":"50GB",
-	    "queue": "sister-job_worker-16gb",
-	    "build_command": "sister-resample/install.sh",
-	    "docker_container_url": docker_container_url,
-	    "algorithm_params":[
-	        {
-	            "field": "l2a_granule",
-	            "type": "file"
-	        },
-	          {
-	            "field": "CRID",
-	            "type": "config",
-	            "default": "000"
-	        }
-	    ]
-	}
-	
-	response = maap.registerAlgorithm(resample_alg)
+
+	resample_alg_yaml = './sister-resample/algorithm_config.yaml'
+	maap.register_algorithm_from_yaml_file(file_path= resample_alg_yaml)
 
 ## Example
 
 	resample_job_response = maap.submitJob(
 	    algo_id="sister-resample",
 	    version="2.0.0",
-	    l2a_granule= '../AVNG_20220502T180901_L2A_RFL_001.tar.gz',
-	    CRID = '001'
+	    reflectance_dataset= '../SISTER_AVNG_L2A_RFL_20220502T180901_001',
+	    crid = '001'
 	    publish_to_cmr=False,
 	    cmr_metadata={},
 	    queue="sister-job_worker-16gb",
