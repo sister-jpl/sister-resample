@@ -14,26 +14,29 @@ In addition to required MAAP job submission arguments the L2A spectral resamplin
 
 |Argument| Type |  Description | Default|
 |---|---|---|---|
-| reflectance_dataset| string |L2A ISOFIT dataset granule URL| -|
-| crid| string | Composite release identifier| 000|
+| reflectance_dataset| file |L2A ISOFIT dataset granule URL| -|
+| crid| config | Composite release identifier| '000'|
 
 
 ## Outputs
 
-The L2A spectral resampling PGE exports 2 ENVI formatted datacubes along with their associated header files. The outputs of the PGE use the following naming convention:
+The outputs of the L2A spectral resampling PGE use the following naming convention:
 
     SISTER_<SENSOR>_L2A_RSRFL_<YYYYMMDDTHHMMSS>_CRID<_SUBPRODUCT>
     
-Additionally, a false color quicklook PNG image is produced of the radiance image using wavelengths 560, 850 and 660 nm for DESIS and 560, 850, 1600 nm for all other sensors.
+and produce the following data products:
 
-|Product name| Description |  Units | Example filename |
-|---|---|---|---|
-| \*RSRFL\*.bin| ENVI 10nm reflectance datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.bin|
-|  \*RSRFL\*.hdr| ENVI 10nm reflectance header file  | - | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.hdr|
-|  \*RSUNC\*.bin| ENVI 10nm uncertainty datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.bin|
-|  \*RSUNC\*.hdr| ENVI 10nm uncertainty header file  | - |SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.hdr|
-| *.png| 10nm reflectance quicklook | % | SISTER\_AVNG\_L2A\_RSRFL_20220502T180901\_001.png|
-
+|Product description |  Units | Example filename |
+|---|---|---|
+| ENVI 10nm Resampled reflectance datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.bin|
+| ENVI 10nm Resampled reflectance header file  | - | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.hdr|
+| Resampled Resampled reflectance metadata  | - | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.met.json|
+| False color PNG quicklook  | - |  SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.png |
+| ENVI 10nm Resampled uncertainty datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.bin|
+| ENVI 10nm Resampled uncertainty header file  | - |SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.hdr|
+| ENVI 10nm Resampled uncertainty metedata | - |SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.met.json|
+| PGE runconfig| - |  SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.runconfig.json |
+| PGE log| - |  SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.log |
 
 ## Algorithm registration
 
@@ -52,9 +55,9 @@ This algorithm can be registered using the algorirthm_config.yml file found in t
 	resample_job_response = maap.submitJob(
 	    algo_id="sister-resample",
 	    version="2.0.0",
-	    reflectance_dataset= '../SISTER_AVNG_L2A_RFL_20220502T180901_001',
+	    reflectance_dataset= 'SISTER_AVNG_L2A_RFL_20220502T180901_001',
 	    crid = '001'
 	    publish_to_cmr=False,
 	    cmr_metadata={},
 	    queue="sister-job_worker-16gb",
-	    identifier='SISTER_AVNG_20170827T175432_L2A_RSRFL_001"
+	    identifier='SISTER_AVNG_L2A_RSRFL_20170827T175432_001"
