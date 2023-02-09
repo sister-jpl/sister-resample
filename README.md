@@ -14,9 +14,9 @@ In addition to required MAAP job submission arguments the L2A spectral resamplin
 
 |Argument| Type |  Description | Default|
 |---|---|---|---|
-| reflectance_dataset| file |L2A ISOFIT dataset granule URL| -|
+| reflectance_dataset| file |L2A reflectance dataset| -|
+| uncertainty_dataset| file |L2A uncertainty dataset| -|
 | crid| config | Composite release identifier| '000'|
-
 
 ## Outputs
 
@@ -30,8 +30,8 @@ and produce the following data products:
 |---|---|---|
 | ENVI 10nm Resampled reflectance datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.bin|
 | ENVI 10nm Resampled reflectance header file  | - | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.hdr|
-| Resampled Resampled reflectance metadata  | - | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.met.json|
-| False color PNG quicklook  | - |  SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.png |
+| Resampled reflectance metadata  | - | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.met.json|
+| False color reflectance quicklook  | - |  SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.png |
 | ENVI 10nm Resampled uncertainty datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.bin|
 | ENVI 10nm Resampled uncertainty header file  | - |SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.hdr|
 | ENVI 10nm Resampled uncertainty metedata | - |SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.met.json|
