@@ -1,4 +1,0 @@
-# sister-resample dependencies
-scipy==1.9.1
-scikit-image==0.19.3
-Pillow==9.2.0
