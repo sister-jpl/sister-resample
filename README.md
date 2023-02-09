@@ -14,64 +14,50 @@ In addition to required MAAP job submission arguments the L2A spectral resamplin
 
 |Argument| Type |  Description | Default|
 |---|---|---|---|
-| l2a_granule| string |L2A ISOFIT dataset granule URL| -|
-
+| reflectance_dataset| file |L2A reflectance dataset| -|
+| uncertainty_dataset| file |L2A uncertainty dataset| -|
+| crid| config | Composite release identifier| '000'|
 
 ## Outputs
 
-The L2A spectral resampling PGE exports 2 ENVI formatted datacubes along with their associated header files. The outputs of the PGE use the following naming convention:
+The outputs of the L2A spectral resampling PGE use the following naming convention:
 
-    SISTER_INSTRUMENT_YYYYMMDDTHHMMSS_L2A_SUBPRODUCT_VERSION
+    SISTER_<SENSOR>_L2A_RSRFL_<YYYYMMDDTHHMMSS>_CRID<_SUBPRODUCT>
+    
+and produce the following data products:
 
-|Subproduct| Description |  Units | Example filename |
-|---|---|---|---|
-| RSRFL| ENVI 10nm reflectance datacube | % | SISTER_AVNG\_20220502T180901\_L2A\_RSRFL_001|
-| | ENVI 10nm reflectance header file  | - | SISTER_AVNG\_20220502T180901\_L2A\_RSRFL_001.hdr|
-| RSUNC| ENVI 10nm uncertainty datacube | - | SISTER_AVNG\_20220502T180901\_L2A\_RSUNC_001|
-| | ENVI 10nm uncertainty header file  | - | SISTER_AVNG\_20220502T180901\_L2A\_RSUNC_001.hdr|
-
-
-All outputs of the PGE are compressed into a single tar.gz file using the following naming structure:
-
- 	 	SISTER_INSTRUMENT_YYYYMMDDTHHMMSS_L2A_RSRFL_VERSION.tar.gz
-
-for example:
-
-		SISTER_AVNG_20220502T180901_L2A_RSRFL_001.tar.gz
+|Product description |  Units | Example filename |
+|---|---|---|
+| ENVI 10nm Resampled reflectance datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.bin|
+| ENVI 10nm Resampled reflectance header file  | - | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.hdr|
+| Resampled reflectance metadata  | - | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.met.json|
+| False color reflectance quicklook  | - |  SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.png |
+| ENVI 10nm Resampled uncertainty datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.bin|
+| ENVI 10nm Resampled uncertainty header file  | - |SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.hdr|
+| ENVI 10nm Resampled uncertainty metedata | - |SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.met.json|
+| PGE runconfig| - |  SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.runconfig.json |
+| PGE log| - |  SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.log |
 
 ## Algorithm registration
 
+This algorithm can be registered using the algorirthm_config.yml file found in this repository:
+
 	from maap.maap import MAAP
+	import IPython
+	
 	maap = MAAP(maap_host="sister-api.imgspec.org")
-	
-	resample_alg = {
-	    "script_command": "sister-resample/.imgspec/imgspec_run.sh",
-	    "repo_url": "https://github.com/EnSpec/sister-resample.git",
-	    "algorithm_name":"1.1.0",
-	    "code_version":"sister-dev",
-	    "algorithm_description":"Spectrally resample reflectance and uncertainty images",
-	    "environment_name":"ubuntu",
-	    "disk_space":"50GB",
-	    "queue": "sister-job_worker-32gb",
-	    "build_command": "sister-resample/.imgspec/install.sh",
-	    "docker_container_url": docker_container_url,
-	    "algorithm_params":[
-	        {
-	            "field": "l2a_granule",
-	            "type": "file"
-	        }
-	    ]
-	}
-	
-	response = maap.registerAlgorithm(resample_alg)
+
+	resample_alg_yaml = './sister-resample/algorithm_config.yaml'
+	maap.register_algorithm_from_yaml_file(file_path= resample_alg_yaml)
 
 ## Example
 
 	resample_job_response = maap.submitJob(
 	    algo_id="sister-resample",
-	    version="1.1.0",
-	    l2a_granule= '../AVNG_20220502T180901_L2A_RFL_001.tar.gz',
+	    version="2.0.0",
+	    reflectance_dataset= 'SISTER_AVNG_L2A_RFL_20220502T180901_001',
+	    crid = '001'
 	    publish_to_cmr=False,
 	    cmr_metadata={},
-	    queue="sister-job_worker-32gb",
-	    identifier='SISTER_AVNG_20170827T175432_L2A_RSRFL_001"
+	    queue="sister-job_worker-16gb",
+	    identifier='SISTER_AVNG_L2A_RSRFL_20170827T175432_001"
