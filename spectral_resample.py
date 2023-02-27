@@ -111,6 +111,11 @@ def resample(in_file,out_file):
     out_header['fwhm'] = agg_fwhm
     out_header['default bands'] = []
 
+    if  "UNC" in in_file:
+        out_header['description'] =' 10nm resampled uncertainty'
+    else:
+        out_header['description'] =' 10nm resampled reflectance'
+
     writer = WriteENVI(out_file,out_header)
     iterator =image.iterate(by = 'line')
 
