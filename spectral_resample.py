@@ -54,7 +54,7 @@ def main():
     print ("Resampling uncertainty")
 
     unc_base_name = os.path.basename(run_config['inputs']['uncertainty_dataset'])
-    sister,sensor,level,product,datetime,crid,subproduct = unc_base_name.split('_')
+    sister,sensor,level,product,datetime,in_crid,subproduct = unc_base_name.split('_')
 
     unc_file = f'input/{unc_base_name}/{unc_base_name}.bin'
     unc_met = unc_file.replace('.bin','.met.json')
