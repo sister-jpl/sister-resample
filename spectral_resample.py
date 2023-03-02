@@ -87,6 +87,11 @@ def generate_metadata(in_file,out_file,metadata):
     with open(out_file, 'w') as out_obj:
         json.dump(in_met,out_obj,indent=3)
 
+def gaussian(x,mu,fwhm):
+
+    c = fwhm/(2* np.sqrt(2*np.log(2)))
+    return np.exp(-1*((x-mu)**2/(2*c**2)))
+
 def resample(in_file,out_file):
 
     image = ht.HyTools()
@@ -100,19 +105,41 @@ def resample(in_file,out_file):
     bins = int(np.round(10/np.diff(image.wavelengths).mean()))
     agg_waves  = np.nanmean(view_as_blocks(image.wavelengths[:(image.bands//bins) * bins],
                                            (bins,)),axis=1)
-    agg_fwhm  = np.nanmean(view_as_blocks(image.fwhm[:(image.bands//bins) * bins],
-                                           (bins,)),axis=1)
+
+    if bins ==1 :
+        agg_fwhm  = image.fwhm
+
+    else:
+        hi_res_waves = np.arange(350,2600)
+        fwhm_array = np.zeros((image.bands,2600-350))
+
+        for i,(wave,fwhm) in enumerate(zip(image.wavelengths,image.fwhm)):
+            fwhm_array[i] = gaussian(hi_res_waves,wave,fwhm)
+
+        sum_fwhm  = np.nansum(view_as_blocks(fwhm_array[:(image.bands//bins) * bins],
+                                               (bins,2600-350)),axis=(1,2))
+        agg_fwhm = []
+        for i in range(len(agg_waves)):
+            arg_max = np.argmax(sum_fwhm[i])
+            half_max =  sum_fwhm[i].max()/2
+            diff = np.abs(sum_fwhm[i]-half_max)
+            end = arg_max + np.argmin(diff[arg_max:])
+            start = np.argmin(diff[:arg_max])
+            agg_fwhm.append(hi_res_waves[end] - hi_res_waves[start])
+
+    #True resampled FWHM is difficult to determine, using a simple nearest neighbor approximation
+    resampled_fwhm = interp1d(agg_waves,agg_fwhm,fill_value = 'extrapolate', kind = 'nearest')(new_waves)
 
     print(f"Aggregating every {bins} bands")
 
     out_header = image.get_header()
     out_header['bands'] = len(new_waves)
     out_header['wavelength'] = new_waves.tolist()
-    out_header['fwhm'] = agg_fwhm
+    out_header['fwhm'] = resampled_fwhm
     out_header['default bands'] = []
 
     if  "UNC" in in_file:
-        out_header['description'] ='10 nm resampled uncertainty'
+        out_header['description'] ='10 nm resampled reflectance uncertainty'
     else:
         out_header['description'] ='10 nm resampled reflectance'
 
@@ -125,7 +152,6 @@ def resample(in_file,out_file):
         interpolator = interp1d(agg_waves,line,fill_value = 'extrapolate', kind = 'cubic')
         line = interpolator(new_waves)
         writer.write_line(line,iterator.current_line)
-
 
 def generate_quicklook(input_file):
 
