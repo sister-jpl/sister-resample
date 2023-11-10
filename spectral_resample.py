@@ -79,9 +79,8 @@ def main():
     shutil.copyfile(run_config_json,
                     out_rfl_file.replace('.bin','.runconfig.json'))
 
-    if os.path.exists("run.log")
-        shutil.copyfile('run.log',
-                        out_rfl_file.replace('.bin','.log'))
+    if os.path.exists("run.log"):
+        shutil.copyfile('run.log', out_rfl_file.replace('.bin', '.log'))
 
     # If experimental, prefix filenames with "EXPERIMENTAL-"
     if experimental:
