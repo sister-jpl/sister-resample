@@ -6,6 +6,7 @@ Space-based Imaging Spectroscopy and Thermal PathfindER
 Author: Adam Chlus
 """
 
+import glob
 import json
 import shutil
 import sys
@@ -28,6 +29,12 @@ def main():
     with open(run_config_json, 'r') as in_file:
         run_config =json.load(in_file)
 
+    experimental = run_config['inputs']['experimental']
+    if experimental:
+        disclaimer = "(DISCLAIMER: THIS DATA IS EXPERIMENTAL AND NOT INTENDED FOR SCIENTIFIC USE) "
+    else:
+        disclaimer = ""
+
     os.mkdir('output')
 
     print ("Resampling reflectance")
@@ -43,12 +50,12 @@ def main():
     out_rfl_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}.bin'
     out_rfl_met = out_rfl_file.replace('.bin','.met.json')
 
-    resample(rfl_file,out_rfl_file)
+    resample(rfl_file,out_rfl_file,disclaimer)
 
     generate_metadata(rfl_met,out_rfl_met,
                       {'product': 'RSRFL',
                       'processing_level': 'L2A',
-                      'description' : '10nm resampled reflectance'})
+                      'description' : f'{disclaimer}10nm resampled reflectance'})
     generate_quicklook(out_rfl_file)
 
     print ("Resampling uncertainty")
@@ -62,18 +69,24 @@ def main():
     out_unc_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}_UNC.bin'
     out_unc_met = out_unc_file.replace('.bin','.met.json')
 
-    resample(unc_file,out_unc_file)
+    resample(unc_file,out_unc_file,disclaimer)
 
     generate_metadata(unc_met,out_unc_met,
                       {'product': 'RSUNC',
                       'processing_level': 'L2A',
-                      'description' : '10nm resampled uncertainty'})
+                      'description' : f'{disclaimer}10nm resampled uncertainty'})
 
     shutil.copyfile(run_config_json,
                     out_rfl_file.replace('.bin','.runconfig.json'))
 
-    shutil.copyfile('run.log',
-                    out_rfl_file.replace('.bin','.log'))
+    if os.path.exists("run.log")
+        shutil.copyfile('run.log',
+                        out_rfl_file.replace('.bin','.log'))
+
+    # If experimental, prefix filenames with "EXPERIMENTAL-"
+    if experimental:
+        for file in glob.glob(f"output/SISTER*"):
+            shutil.move(file, f"output/EXPERIMENTAL-{os.path.basename(file)}")
 
 
 def generate_metadata(in_file,out_file,metadata):
@@ -92,7 +105,7 @@ def gaussian(x,mu,fwhm):
     c = fwhm/(2* np.sqrt(2*np.log(2)))
     return np.exp(-1*((x-mu)**2/(2*c**2)))
 
-def resample(in_file,out_file):
+def resample(in_file,out_file,disclaimer):
 
     image = ht.HyTools()
     image.read_file(in_file,'envi')
@@ -139,9 +152,9 @@ def resample(in_file,out_file):
     out_header['default bands'] = []
 
     if  "UNC" in in_file:
-        out_header['description'] ='10 nm resampled reflectance uncertainty'
+        out_header['description'] =f'{disclaimer}10 nm resampled reflectance uncertainty'
     else:
-        out_header['description'] ='10 nm resampled reflectance'
+        out_header['description'] =f'{disclaimer}10 nm resampled reflectance'
 
     writer = WriteENVI(out_file,out_header)
     iterator =image.iterate(by = 'line')
