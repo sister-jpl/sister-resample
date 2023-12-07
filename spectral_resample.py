@@ -6,6 +6,7 @@ Space-based Imaging Spectroscopy and Thermal PathfindER
 Author: Adam Chlus
 """
 
+import datetime as dt
 import glob
 import json
 import shutil
@@ -17,6 +18,9 @@ import numpy as np
 from scipy.interpolate import interp1d
 from skimage.util import view_as_blocks
 from PIL import Image
+import pystac
+
+import spectral.io.envi as envi
 
 def main():
     ''' Perform a two-step spectral resampling to 10nm. First wavelengths are aggregated
@@ -52,10 +56,6 @@ def main():
 
     resample(rfl_file,out_rfl_file,disclaimer)
 
-    generate_metadata(rfl_met,out_rfl_met,
-                      {'product': 'RSRFL',
-                      'processing_level': 'L2A',
-                      'description' : f'{disclaimer}10nm resampled reflectance'})
     generate_quicklook(out_rfl_file)
 
     print ("Resampling uncertainty")
@@ -71,38 +71,70 @@ def main():
 
     resample(unc_file,out_unc_file,disclaimer)
 
-    generate_metadata(unc_met,out_unc_met,
-                      {'product': 'RSUNC',
-                      'processing_level': 'L2A',
-                      'description' : f'{disclaimer}10nm resampled uncertainty'})
-
-    shutil.copyfile(run_config_json,
-                    out_rfl_file.replace('.bin','.runconfig.json'))
-
-    if os.path.exists("run.log"):
-        shutil.copyfile('run.log', out_rfl_file.replace('.bin', '.log'))
-
     # If experimental, prefix filenames with "EXPERIMENTAL-"
     if experimental:
         for file in glob.glob(f"output/SISTER*"):
             shutil.move(file, f"output/EXPERIMENTAL-{os.path.basename(file)}")
 
+    rsrfl_file = glob.glob("output/*%s.bin" % run_config['inputs']['crid'])[0]
+    rsrfl_basename = os.path.basename(rsrfl_file)[:-4]
 
-def generate_metadata(in_file,out_file,metadata):
+    output_runconfig_path = f'output/{rsrfl_basename}.runconfig.json'
+    shutil.copyfile(run_config_json, output_runconfig_path)
 
-    with open(in_file, 'r') as in_obj:
-        in_met =json.load(in_obj)
+    output_log_path = f'output/{rsrfl_basename}.log'
+    if os.path.exists("run.log"):
+        shutil.copyfile('run.log', output_log_path)
 
-    for key,value in metadata.items():
-        in_met[key] = value
+    # Generate STAC
 
-    with open(out_file, 'w') as out_obj:
-        json.dump(in_met,out_obj,indent=3)
+    catalog = pystac.Catalog(id=rsrfl_basename,
+                             description=f'{disclaimer}This catalog contains the output data products of the SISTER '
+                                         f'resampled reflectance PGE, including resampled reflectance and resampled '
+                                         f'reflectance uncertainty. Execution artifacts including the runconfig file '
+                                         f'and execution log file are included with the resampled reflectance data.')
+
+    # Add items for data products
+    hdr_files = glob.glob("output/*SISTER*.hdr")
+    hdr_files.sort()
+    for hdr_file in hdr_files:
+        # TODO: Use incoming item.json to get properties and geometry and use hdr_file for description (?)
+        metadata = generate_stac_metadata(hdr_file)
+        assets = {
+            "envi_binary": f"./{os.path.basename(hdr_file.replace('.hdr', '.bin'))}",
+            "envi_header": f"./{os.path.basename(hdr_file)}"
+        }
+        # If it's the reflectance product, then add png, runconfig, and log
+        if os.path.basename(hdr_file) == f"{rsrfl_basename}.hdr":
+            png_file = hdr_file.replace(".hdr", ".png")
+            assets["browse"] = f"./{os.path.basename(png_file)}"
+            assets["runconfig"] = f"./{os.path.basename(output_runconfig_path)}"
+            if os.path.exists(output_log_path):
+                assets["log"] = f"./{os.path.basename(output_log_path)}"
+        item = create_item(metadata, assets)
+        catalog.add_item(item)
+
+    # set catalog hrefs
+    catalog.normalize_hrefs(f"./output/{rsrfl_basename}")
+
+    # save the catalog
+    catalog.describe()
+    catalog.save(catalog_type=pystac.CatalogType.SELF_CONTAINED)
+    print("Catalog HREF: ", catalog.get_self_href())
+    # print("Item HREF: ", item.get_self_href())
+
+    # Move the assets from the output directory to the stac item directories
+    for item in catalog.get_items():
+        for asset in item.assets.values():
+            fname = os.path.basename(asset.href)
+            shutil.move(f"output/{fname}", f"output/{rsrfl_basename}/{item.id}/{fname}")
+
 
 def gaussian(x,mu,fwhm):
 
     c = fwhm/(2* np.sqrt(2*np.log(2)))
     return np.exp(-1*((x-mu)**2/(2*c**2)))
+
 
 def resample(in_file,out_file,disclaimer):
 
@@ -165,6 +197,7 @@ def resample(in_file,out_file,disclaimer):
         line = interpolator(new_waves)
         writer.write_line(line,iterator.current_line)
 
+
 def generate_quicklook(input_file):
 
     img = ht.HyTools()
@@ -192,6 +225,47 @@ def generate_quicklook(input_file):
 
     im = Image.fromarray(rgb)
     im.save(image_file)
+
+
+def generate_stac_metadata(header_file):
+
+    header = envi.read_envi_header(header_file)
+    base_name = os.path.basename(header_file)[:-4]
+
+    metadata = {}
+    metadata['id'] = base_name
+    metadata['start_datetime'] = dt.datetime.strptime(header['start acquisition time'], "%Y-%m-%dt%H:%M:%Sz")
+    metadata['end_datetime'] = dt.datetime.strptime(header['end acquisition time'], "%Y-%m-%dt%H:%M:%Sz")
+    # Split corner coordinates string into list
+    coords = [float(x) for x in header['bounding box'].replace(']', '').replace('[', '').split(',')]
+    geometry = [list(x) for x in zip(coords[::2], coords[1::2])]
+    # Add first coord to the end of the list to close the polygon
+    geometry.append(geometry[0])
+    metadata['geometry'] = geometry
+    metadata['properties'] = {
+        'sensor': header['sensor type'].upper(),
+        'description': header['description'],
+        'product': base_name.split('_')[4],
+        'processing_level': base_name.split('_')[2]
+    }
+    return metadata
+
+
+def create_item(metadata, assets):
+    item = pystac.Item(
+        id=metadata['id'],
+        datetime=metadata['start_datetime'],
+        start_datetime=metadata['start_datetime'],
+        end_datetime=metadata['end_datetime'],
+        geometry=metadata['geometry'],
+        bbox=None,
+        properties=metadata['properties']
+    )
+    # Add assets
+    for key, href in assets.items():
+        item.add_asset(key=key, asset=pystac.Asset(href=href))
+    return item
+
 
 if __name__ == "__main__":
     main()
