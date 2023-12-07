@@ -19,7 +19,6 @@ from scipy.interpolate import interp1d
 from skimage.util import view_as_blocks
 from PIL import Image
 import pystac
-
 import spectral.io.envi as envi
 
 def main():
