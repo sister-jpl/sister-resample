@@ -48,10 +48,8 @@ def main():
     crid = run_config['inputs']['crid']
 
     rfl_file = f'input/{rfl_base_name}/{rfl_base_name}.bin'
-    rfl_met = rfl_file.replace('.bin','.met.json')
 
     out_rfl_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}.bin'
-    out_rfl_met = out_rfl_file.replace('.bin','.met.json')
 
     resample(rfl_file,out_rfl_file,disclaimer)
 
@@ -63,10 +61,8 @@ def main():
     sister,sensor,level,product,datetime,in_crid,subproduct = unc_base_name.split('_')
 
     unc_file = f'input/{unc_base_name}/{unc_base_name}.bin'
-    unc_met = unc_file.replace('.bin','.met.json')
 
     out_unc_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}_UNC.bin'
-    out_unc_met = out_unc_file.replace('.bin','.met.json')
 
     resample(unc_file,out_unc_file,disclaimer)
 
