@@ -86,7 +86,6 @@ def main():
         shutil.copyfile('run.log', output_log_path)
 
     # Generate STAC
-
     catalog = pystac.Catalog(id=rsrfl_basename,
                              description=f'{disclaimer}This catalog contains the output data products of the SISTER '
                                          f'resampled reflectance PGE, including resampled reflectance and resampled '
@@ -241,10 +240,13 @@ def generate_stac_metadata(header_file):
     # Add first coord to the end of the list to close the polygon
     geometry.append(geometry[0])
     metadata['geometry'] = geometry
+    product = base_name.split('_')[3]
+    if "UNC" in base_name:
+        product += "_UNC"
     metadata['properties'] = {
         'sensor': header['sensor type'].upper(),
         'description': header['description'],
-        'product': base_name.split('_')[4],
+        'product': product,
         'processing_level': base_name.split('_')[2]
     }
     return metadata
