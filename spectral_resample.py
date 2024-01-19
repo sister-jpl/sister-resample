@@ -47,7 +47,7 @@ def main():
 
     crid = run_config['inputs']['crid']
 
-    rfl_file = f'input/{rfl_base_name}/{rfl_base_name}.bin'
+    rfl_file = f"{run_config['inputs']['reflectance_dataset']}/{rfl_base_name}.bin"
 
     out_rfl_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}.bin'
 
@@ -60,9 +60,9 @@ def main():
     unc_base_name = os.path.basename(run_config['inputs']['uncertainty_dataset'])
     sister,sensor,level,product,datetime,in_crid,subproduct = unc_base_name.split('_')
 
-    unc_file = f'input/{unc_base_name}/{unc_base_name}.bin'
+    unc_file = f"{run_config['inputs']['uncertainty_dataset']}/{unc_base_name}.bin"
 
-    out_unc_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}_UNC.bin'
+    out_unc_file = f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}_UNC.bin'
 
     resample(unc_file,out_unc_file,disclaimer)
 
@@ -117,11 +117,13 @@ def main():
     print("Catalog HREF: ", catalog.get_self_href())
     # print("Item HREF: ", item.get_self_href())
 
-    # Move the assets from the output directory to the stac item directories
+    # Move the assets from the output directory to the stac item directories and create empty .met.json
     for item in catalog.get_items():
         for asset in item.assets.values():
             fname = os.path.basename(asset.href)
             shutil.move(f"output/{fname}", f"output/{rsrfl_basename}/{item.id}/{fname}")
+        with open(f"output/{rsrfl_basename}/{item.id}/{item.id}.met.json", mode="w"):
+            pass
 
 
 def gaussian(x,mu,fwhm):
@@ -235,15 +237,20 @@ def generate_stac_metadata(header_file):
     geometry = [list(x) for x in zip(coords[::2], coords[1::2])]
     # Add first coord to the end of the list to close the polygon
     geometry.append(geometry[0])
-    metadata['geometry'] = geometry
-    product = base_name.split('_')[3]
+    metadata['geometry'] = {
+        "type": "Polygon",
+        "coordinates": geometry
+    }
+    base_tokens = base_name.split('_')
+    metadata['collection'] = f"SISTER_{base_tokens[1]}_{base_tokens[2]}_{base_tokens[3]}_{base_tokens[5]}"
+    product = base_tokens[3]
     if "UNC" in base_name:
         product += "_UNC"
     metadata['properties'] = {
-        'sensor': header['sensor type'].upper(),
+        'sensor': base_tokens[1],
         'description': header['description'],
         'product': product,
-        'processing_level': base_name.split('_')[2]
+        'processing_level': base_tokens[2]
     }
     return metadata
 
