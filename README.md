@@ -3,61 +3,74 @@
 ## Description
 
 The L2A spectral resample PGE takes as input surface reflectance and uncertainty images and spectrally resamples the data
-to 10nm spectral spacing. Spectral resampling is performed in a two-step process, first bands are aggregated and averaged to the closest resolution to the target resolution (10 nm). For example DESIS data, which has an average spectral spacing of 2.55 nm, is aggregated and averaged every 4 bands. Next a piecewise cubic interpolator is used to interpolate the spectra to the target wavelength spacing. Output range for all sensors except DESIS is 400-2500 nm, while the DESIS output range is 400-990 nm.
+to 10nm spectral spacing. Spectral resampling is performed in a two-step process, first bands are aggregated and averaged 
+to the closest resolution to the target resolution (10 nm). For example DESIS data, which has an average spectral spacing 
+of 2.55 nm, is aggregated and averaged every 4 bands. Next a piecewise cubic interpolator is used to interpolate the spectra 
+to the target wavelength spacing. Output range for all sensors except DESIS is 400-2500 nm, while the DESIS output range 
+is 400-990 nm.
 
 ![DESIS spectral resampling example](./figures/spectral_resample_example.png)
 
 ## PGE Arguments
 
-In addition to required MAAP job submission arguments the L2A spectral resampling PGE also takes the following argument(s):
+The L2A spectral resampling PGE takes the following argument(s):
 
 
-|Argument| Type |  Description | Default|
-|---|---|---|---|
-| reflectance_dataset| file |L2A reflectance dataset| -|
-| uncertainty_dataset| file |L2A uncertainty dataset| -|
-| crid| config | Composite release identifier| '000'|
+| Argument            | Type      | Description                          | Default |
+|---------------------|-----------|--------------------------------------|---------|
+| reflectance_dataset | directory | L2A reflectance dataset              | -       |
+| uncertainty_dataset | directory | L2A uncertainty dataset              | -       |
+| crid                | config    | Composite release identifier         | '000'   |
+| experimental        | config    | Designates outputs as "experimental" | 'True'  |
 
 ## Outputs
 
 The outputs of the L2A spectral resampling PGE use the following naming convention:
 
-    SISTER_<SENSOR>_L2A_RSRFL_<YYYYMMDDTHHMMSS>_CRID<_SUBPRODUCT>
+    (EXPERIMENTAL-)SISTER_<SENSOR>_L2A_RSRFL_<YYYYMMDDTHHMMSS>_<CRID>_<SUBPRODUCT>
     
-and produce the following data products:
+Note that the "EXPERIMENTAL-" prefix is optional and is only added when the "experimental" flag is set to True.
 
-|Product description |  Units | Example filename |
-|---|---|---|
-| ENVI 10nm Resampled reflectance datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.bin|
-| ENVI 10nm Resampled reflectance header file  | - | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.hdr|
-| Resampled reflectance metadata  | - | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.met.json|
-| False color reflectance quicklook  | - |  SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.png |
-| ENVI 10nm Resampled uncertainty datacube | % | SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.bin|
-| ENVI 10nm Resampled uncertainty header file  | - |SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.hdr|
-| ENVI 10nm Resampled uncertainty metedata | - |SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001_RSUNC.met.json|
-| PGE runconfig| - |  SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.runconfig.json |
-| PGE log| - |  SISTER\_AVNG\_L2A\_RSRFL\_20220502T180901\_001.log |
+The following data products are produced:
 
-## Algorithm registration
+| Product description                             | Units | Example filename                                       |
+|-------------------------------------------------|-------|--------------------------------------------------------|
+| ENVI 10nm Resampled reflectance datacube        | %     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.bin     |
+| ENVI 10nm Resampled reflectance header file     | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.hdr     |
+| Resampled reflectance metadata (STAC formatted) | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.json    |
+| False color reflectance quicklook               | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.png     |
+| ENVI 10nm Resampled uncertainty datacube        | %     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001_UNC.bin |
+| ENVI 10nm Resampled uncertainty header file     | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001_UNC.hdr |
+| Resampled uncertainty metedata (STAC formatted) | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001_UNC.met.json |
+| PGE runconfig                                   | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.runconfig.json |
+| PGE log                                         | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.log     |
 
-This algorithm can be registered using the algorirthm_config.yml file found in this repository:
+Metadata files are [STAC formatted](https://stacspec.org/en) and compatible with tools in the [STAC ecosystem](https://stacindex.org/ecosystem).
 
-	from maap.maap import MAAP
-	import IPython
-	
-	maap = MAAP(maap_host="sister-api.imgspec.org")
+## Executing the Algorithm
 
-	resample_alg_yaml = './sister-resample/algorithm_config.yaml'
-	maap.register_algorithm_from_yaml_file(file_path= resample_alg_yaml)
+This algorithm requires [Anaconda Python](https://www.anaconda.com/download)
 
-## Example
+To install and run the code, first clone the repository and execute the install script:
 
-	resample_job_response = maap.submitJob(
-	    algo_id="sister-resample",
-	    version="2.0.0",
-	    reflectance_dataset= 'SISTER_AVNG_L2A_RFL_20220502T180901_001',
-	    crid = '001'
-	    publish_to_cmr=False,
-	    cmr_metadata={},
-	    queue="sister-job_worker-16gb",
-	    identifier='SISTER_AVNG_L2A_RSRFL_20170827T175432_001"
+    git clone https://github.com/sister-jpl/sister-resample.git
+    cd sister-resample
+    ./install.sh
+    cd ..
+
+Then, create a working directory and enter it:
+
+    mkdir WORK_DIR
+    cd WORK_DIR
+
+Copy input files to the work directory. For each "dataset" input, create a folder with the dataset name, then download 
+the data file(s) and STAC JSON file into the folder.  For example, the reflectance dataset input would look like this:
+
+    WORK_DIR/SISTER_AVCL_L2A_RFL_20110513T175417_001/SISTER_AVCL_L2A_RFL_20110513T175417_001.bin
+    WORK_DIR/SISTER_AVCL_L2A_RFL_20110513T175417_001/SISTER_AVCL_L2A_RFL_20110513T175417_001.hdr
+    WORK_DIR/SISTER_AVCL_L2A_RFL_20110513T175417_001/SISTER_AVCL_L2A_RFL_20110513T175417_001.json
+
+Finally, run the code 
+
+    ../sister-resample/pge_run.sh --reflectance_dataset SISTER_AVCL_L2A_RFL_20110513T175417_001 --uncertainty_dataset SISTER_AVCL_L2A_RFL_20110513T175417_001_UNC --crid 001 --experimental True
+
