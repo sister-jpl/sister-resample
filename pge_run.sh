@@ -8,4 +8,4 @@ echo "Creating runconfig"
 python ${pge_dir}/generate_runconfig.py "${@:1}"
 
 echo "Running L2a Spectral Resample PGE"
-python ${pge_dir}/spectral_resample.py runconfig.json > pge_run.log
+python ${pge_dir}/spectral_resample.py runconfig.json > pge_run.log 2>&1
