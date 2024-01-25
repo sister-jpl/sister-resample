@@ -9,6 +9,7 @@ Author: Adam Chlus
 import datetime as dt
 import glob
 import json
+import logging
 import shutil
 import sys
 import os
@@ -26,6 +27,17 @@ def main():
     to approximateley 10nm, then aggregated spectra a interpolated to exactly 10nm using a
     piecewise interpolator.
     '''
+
+    # Set up console logging using root logger
+    logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
+    logger = logging.getLogger("sister-resample")
+    # Set up file handler logging
+    handler = logging.FileHandler("pge_run.log")
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s %(levelname)s [%(module)s]: %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.info("Starting spectral_resample.py")
 
     run_config_json = sys.argv[1]
 
@@ -51,7 +63,7 @@ def main():
 
     out_rfl_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}.bin'
 
-    resample(rfl_file,out_rfl_file,disclaimer)
+    resample(rfl_file,out_rfl_file,disclaimer, logger)
 
     generate_quicklook(out_rfl_file)
 
@@ -64,7 +76,7 @@ def main():
 
     out_unc_file = f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}_UNC.bin'
 
-    resample(unc_file,out_unc_file,disclaimer)
+    resample(unc_file,out_unc_file,disclaimer, logger)
 
     # If experimental, prefix filenames with "EXPERIMENTAL-"
     if experimental:
@@ -132,7 +144,7 @@ def gaussian(x,mu,fwhm):
     return np.exp(-1*((x-mu)**2/(2*c**2)))
 
 
-def resample(in_file,out_file,disclaimer):
+def resample(in_file,out_file,disclaimer, logger):
 
     image = ht.HyTools()
     image.read_file(in_file,'envi')
@@ -170,7 +182,7 @@ def resample(in_file,out_file,disclaimer):
     #True resampled FWHM is difficult to determine, using a simple nearest neighbor approximation
     resampled_fwhm = interp1d(agg_waves,agg_fwhm,fill_value = 'extrapolate', kind = 'nearest')(new_waves)
 
-    print(f"Aggregating every {bins} bands")
+    logger.info(f"Aggregating every {bins} bands")
 
     out_header = image.get_header()
     out_header['bands'] = len(new_waves)
