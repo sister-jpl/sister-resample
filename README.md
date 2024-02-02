@@ -16,12 +16,12 @@ is 400-990 nm.
 The L2A spectral resampling PGE takes the following argument(s):
 
 
-| Argument            | Type      | Description                          | Default |
-|---------------------|-----------|--------------------------------------|---------|
-| reflectance_dataset | directory | L2A reflectance dataset              | -       |
-| uncertainty_dataset | directory | L2A uncertainty dataset              | -       |
-| crid                | config    | Composite release identifier         | '000'   |
-| experimental        | config    | Designates outputs as "experimental" | 'True'  |
+| Argument            | Description                          | Default |
+|---------------------|--------------------------------------|---------|
+| reflectance_dataset | L2A reflectance dataset              | -       |
+| uncertainty_dataset | L2A uncertainty dataset              | -       |
+| crid                | Composite release identifier         | '000'   |
+| experimental        | Designates outputs as "experimental" | 'True'  |
 
 ## Outputs
 
@@ -33,17 +33,17 @@ Note that the "EXPERIMENTAL-" prefix is optional and is only added when the "exp
 
 The following data products are produced:
 
-| Product description                             | Units | Example filename                                       |
-|-------------------------------------------------|-------|--------------------------------------------------------|
-| ENVI 10nm Resampled reflectance datacube        | %     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.bin     |
-| ENVI 10nm Resampled reflectance header file     | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.hdr     |
-| Resampled reflectance metadata (STAC formatted) | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.json    |
-| False color reflectance quicklook               | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.png     |
-| ENVI 10nm Resampled uncertainty datacube        | %     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001_UNC.bin |
-| ENVI 10nm Resampled uncertainty header file     | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001_UNC.hdr |
-| Resampled uncertainty metedata (STAC formatted) | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001_UNC.met.json |
-| PGE runconfig                                   | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.runconfig.json |
-| PGE log                                         | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_001.log     |
+| Product description                             | Units | Example filename                                              |
+|-------------------------------------------------|-------|---------------------------------------------------------------|
+| ENVI 10nm Resampled reflectance datacube        | %     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_000.bin            |
+| ENVI 10nm Resampled reflectance header file     | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_000.hdr            |
+| Resampled reflectance metadata (STAC formatted) | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_000.json           |
+| False color reflectance quicklook               | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_000.png            |
+| ENVI 10nm Resampled uncertainty datacube        | %     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_000_UNC.bin        |
+| ENVI 10nm Resampled uncertainty header file     | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_000_UNC.hdr        |
+| Resampled uncertainty metedata (STAC formatted) | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_000_UNC.json       |
+| PGE runconfig                                   | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_000.runconfig.json |
+| PGE log                                         | -     | SISTER\_AVCL\_L2A\_RSRFL\_20110513T175417\_000.log            |
 
 Metadata files are [STAC formatted](https://stacspec.org/en) and compatible with tools in the [STAC ecosystem](https://stacindex.org/ecosystem).
 
@@ -66,11 +66,11 @@ Then, create a working directory and enter it:
 Copy input files to the work directory. For each "dataset" input, create a folder with the dataset name, then download 
 the data file(s) and STAC JSON file into the folder.  For example, the reflectance dataset input would look like this:
 
-    WORK_DIR/SISTER_AVCL_L2A_RFL_20110513T175417_001/SISTER_AVCL_L2A_RFL_20110513T175417_001.bin
-    WORK_DIR/SISTER_AVCL_L2A_RFL_20110513T175417_001/SISTER_AVCL_L2A_RFL_20110513T175417_001.hdr
-    WORK_DIR/SISTER_AVCL_L2A_RFL_20110513T175417_001/SISTER_AVCL_L2A_RFL_20110513T175417_001.json
+    WORK_DIR/SISTER_AVCL_L2A_RFL_20110513T175417_000/SISTER_AVCL_L2A_RFL_20110513T175417_000.bin
+    WORK_DIR/SISTER_AVCL_L2A_RFL_20110513T175417_000/SISTER_AVCL_L2A_RFL_20110513T175417_000.hdr
+    WORK_DIR/SISTER_AVCL_L2A_RFL_20110513T175417_000/SISTER_AVCL_L2A_RFL_20110513T175417_000.json
 
 Finally, run the code 
 
-    ../sister-resample/pge_run.sh --reflectance_dataset SISTER_AVCL_L2A_RFL_20110513T175417_001 --uncertainty_dataset SISTER_AVCL_L2A_RFL_20110513T175417_001_UNC --crid 001 --experimental True
+    ../sister-resample/pge_run.sh --reflectance_dataset SISTER_AVCL_L2A_RFL_20110513T175417_000 --uncertainty_dataset SISTER_AVCL_L2A_RFL_20110513T175417_000_UNC
 
