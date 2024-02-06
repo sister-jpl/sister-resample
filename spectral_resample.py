@@ -6,7 +6,10 @@ Space-based Imaging Spectroscopy and Thermal PathfindER
 Author: Adam Chlus
 """
 
+import datetime as dt
+import glob
 import json
+import logging
 import shutil
 import sys
 import os
@@ -16,6 +19,8 @@ import numpy as np
 from scipy.interpolate import interp1d
 from skimage.util import view_as_blocks
 from PIL import Image
+import pystac
+import spectral.io.envi as envi
 
 def main():
     ''' Perform a two-step spectral resampling to 10nm. First wavelengths are aggregated
@@ -23,10 +28,27 @@ def main():
     piecewise interpolator.
     '''
 
+    # Set up console logging using root logger
+    logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
+    logger = logging.getLogger("sister-resample")
+    # Set up file handler logging
+    handler = logging.FileHandler("pge_run.log")
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s %(levelname)s [%(module)s]: %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.info("Starting spectral_resample.py")
+
     run_config_json = sys.argv[1]
 
     with open(run_config_json, 'r') as in_file:
         run_config =json.load(in_file)
+
+    experimental = run_config['inputs']['experimental']
+    if experimental:
+        disclaimer = "(DISCLAIMER: THIS DATA IS EXPERIMENTAL AND NOT INTENDED FOR SCIENTIFIC USE) "
+    else:
+        disclaimer = ""
 
     os.mkdir('output')
 
@@ -37,18 +59,12 @@ def main():
 
     crid = run_config['inputs']['crid']
 
-    rfl_file = f'input/{rfl_base_name}/{rfl_base_name}.bin'
-    rfl_met = rfl_file.replace('.bin','.met.json')
+    rfl_file = f"{run_config['inputs']['reflectance_dataset']}/{rfl_base_name}.bin"
 
     out_rfl_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}.bin'
-    out_rfl_met = out_rfl_file.replace('.bin','.met.json')
 
-    resample(rfl_file,out_rfl_file)
+    resample(rfl_file,out_rfl_file,disclaimer, logger)
 
-    generate_metadata(rfl_met,out_rfl_met,
-                      {'product': 'RSRFL',
-                      'processing_level': 'L2A',
-                      'description' : '10nm resampled reflectance'})
     generate_quicklook(out_rfl_file)
 
     print ("Resampling uncertainty")
@@ -56,43 +72,79 @@ def main():
     unc_base_name = os.path.basename(run_config['inputs']['uncertainty_dataset'])
     sister,sensor,level,product,datetime,in_crid,subproduct = unc_base_name.split('_')
 
-    unc_file = f'input/{unc_base_name}/{unc_base_name}.bin'
-    unc_met = unc_file.replace('.bin','.met.json')
+    unc_file = f"{run_config['inputs']['uncertainty_dataset']}/{unc_base_name}.bin"
 
-    out_unc_file =  f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}_UNC.bin'
-    out_unc_met = out_unc_file.replace('.bin','.met.json')
+    out_unc_file = f'output/SISTER_{sensor}_L2A_RSRFL_{datetime}_{crid}_UNC.bin'
 
-    resample(unc_file,out_unc_file)
+    resample(unc_file,out_unc_file,disclaimer, logger)
 
-    generate_metadata(unc_met,out_unc_met,
-                      {'product': 'RSUNC',
-                      'processing_level': 'L2A',
-                      'description' : '10nm resampled uncertainty'})
+    # If experimental, prefix filenames with "EXPERIMENTAL-"
+    if experimental:
+        for file in glob.glob(f"output/SISTER*"):
+            shutil.move(file, f"output/EXPERIMENTAL-{os.path.basename(file)}")
 
-    shutil.copyfile(run_config_json,
-                    out_rfl_file.replace('.bin','.runconfig.json'))
+    rsrfl_file = glob.glob("output/*%s.bin" % run_config['inputs']['crid'])[0]
+    rsrfl_basename = os.path.basename(rsrfl_file)[:-4]
 
-    shutil.copyfile('run.log',
-                    out_rfl_file.replace('.bin','.log'))
+    output_runconfig_path = f'output/{rsrfl_basename}.runconfig.json'
+    shutil.copyfile(run_config_json, output_runconfig_path)
 
+    output_log_path = f'output/{rsrfl_basename}.log'
+    if os.path.exists("pge_run.log"):
+        shutil.copyfile('pge_run.log', output_log_path)
 
-def generate_metadata(in_file,out_file,metadata):
+    # Generate STAC
+    catalog = pystac.Catalog(id=rsrfl_basename,
+                             description=f'{disclaimer}This catalog contains the output data products of the SISTER '
+                                         f'resampled reflectance PGE, including resampled reflectance and resampled '
+                                         f'reflectance uncertainty. Execution artifacts including the runconfig file '
+                                         f'and execution log file are included with the resampled reflectance data.')
 
-    with open(in_file, 'r') as in_obj:
-        in_met =json.load(in_obj)
+    # Add items for data products
+    hdr_files = glob.glob("output/*SISTER*.hdr")
+    hdr_files.sort()
+    for hdr_file in hdr_files:
+        # TODO: Use incoming item.json to get properties and geometry and use hdr_file for description (?)
+        metadata = generate_stac_metadata(hdr_file)
+        assets = {
+            "envi_binary": f"./{os.path.basename(hdr_file.replace('.hdr', '.bin'))}",
+            "envi_header": f"./{os.path.basename(hdr_file)}"
+        }
+        # If it's the reflectance product, then add png, runconfig, and log
+        if os.path.basename(hdr_file) == f"{rsrfl_basename}.hdr":
+            png_file = hdr_file.replace(".hdr", ".png")
+            assets["browse"] = f"./{os.path.basename(png_file)}"
+            assets["runconfig"] = f"./{os.path.basename(output_runconfig_path)}"
+            if os.path.exists(output_log_path):
+                assets["log"] = f"./{os.path.basename(output_log_path)}"
+        item = create_item(metadata, assets)
+        catalog.add_item(item)
 
-    for key,value in metadata.items():
-        in_met[key] = value
+    # set catalog hrefs
+    catalog.normalize_hrefs(f"./output/{rsrfl_basename}")
 
-    with open(out_file, 'w') as out_obj:
-        json.dump(in_met,out_obj,indent=3)
+    # save the catalog
+    catalog.describe()
+    catalog.save(catalog_type=pystac.CatalogType.SELF_CONTAINED)
+    print("Catalog HREF: ", catalog.get_self_href())
+    # print("Item HREF: ", item.get_self_href())
+
+    # Move the assets from the output directory to the stac item directories and create empty .met.json
+    for item in catalog.get_items():
+        for asset in item.assets.values():
+            fname = os.path.basename(asset.href)
+            shutil.move(f"output/{fname}", f"output/{rsrfl_basename}/{item.id}/{fname}")
+        with open(f"output/{rsrfl_basename}/{item.id}/{item.id}.met.json", mode="w"):
+            pass
+
 
 def gaussian(x,mu,fwhm):
 
     c = fwhm/(2* np.sqrt(2*np.log(2)))
     return np.exp(-1*((x-mu)**2/(2*c**2)))
 
-def resample(in_file,out_file):
+
+def resample(in_file,out_file,disclaimer, logger):
 
     image = ht.HyTools()
     image.read_file(in_file,'envi')
@@ -130,7 +182,7 @@ def resample(in_file,out_file):
     #True resampled FWHM is difficult to determine, using a simple nearest neighbor approximation
     resampled_fwhm = interp1d(agg_waves,agg_fwhm,fill_value = 'extrapolate', kind = 'nearest')(new_waves)
 
-    print(f"Aggregating every {bins} bands")
+    logger.info(f"Aggregating every {bins} bands")
 
     out_header = image.get_header()
     out_header['bands'] = len(new_waves)
@@ -139,9 +191,9 @@ def resample(in_file,out_file):
     out_header['default bands'] = []
 
     if  "UNC" in in_file:
-        out_header['description'] ='10 nm resampled reflectance uncertainty'
+        out_header['description'] =f'{disclaimer}10 nm resampled reflectance uncertainty'
     else:
-        out_header['description'] ='10 nm resampled reflectance'
+        out_header['description'] =f'{disclaimer}10 nm resampled reflectance'
 
     writer = WriteENVI(out_file,out_header)
     iterator =image.iterate(by = 'line')
@@ -152,6 +204,7 @@ def resample(in_file,out_file):
         interpolator = interp1d(agg_waves,line,fill_value = 'extrapolate', kind = 'cubic')
         line = interpolator(new_waves)
         writer.write_line(line,iterator.current_line)
+
 
 def generate_quicklook(input_file):
 
@@ -180,6 +233,56 @@ def generate_quicklook(input_file):
 
     im = Image.fromarray(rgb)
     im.save(image_file)
+
+
+def generate_stac_metadata(header_file):
+
+    header = envi.read_envi_header(header_file)
+    base_name = os.path.basename(header_file)[:-4]
+
+    metadata = {}
+    metadata['id'] = base_name
+    metadata['start_datetime'] = dt.datetime.strptime(header['start acquisition time'], "%Y-%m-%dt%H:%M:%Sz")
+    metadata['end_datetime'] = dt.datetime.strptime(header['end acquisition time'], "%Y-%m-%dt%H:%M:%Sz")
+    # Split corner coordinates string into list
+    coords = [float(x) for x in header['bounding box'].replace(']', '').replace('[', '').split(',')]
+    geometry = [list(x) for x in zip(coords[::2], coords[1::2])]
+    # Add first coord to the end of the list to close the polygon
+    geometry.append(geometry[0])
+    metadata['geometry'] = {
+        "type": "Polygon",
+        "coordinates": geometry
+    }
+    base_tokens = base_name.split('_')
+    metadata['collection'] = f"SISTER_{base_tokens[1]}_{base_tokens[2]}_{base_tokens[3]}_{base_tokens[5]}"
+    product = base_tokens[3]
+    if "UNC" in base_name:
+        product += "_UNC"
+    metadata['properties'] = {
+        'sensor': base_tokens[1],
+        'description': header['description'],
+        'product': product,
+        'processing_level': base_tokens[2]
+    }
+    return metadata
+
+
+def create_item(metadata, assets):
+    item = pystac.Item(
+        id=metadata['id'],
+        datetime=metadata['start_datetime'],
+        start_datetime=metadata['start_datetime'],
+        end_datetime=metadata['end_datetime'],
+        geometry=metadata['geometry'],
+        collection=metadata['collection'],
+        bbox=None,
+        properties=metadata['properties']
+    )
+    # Add assets
+    for key, href in assets.items():
+        item.add_asset(key=key, asset=pystac.Asset(href=href))
+    return item
+
 
 if __name__ == "__main__":
     main()
