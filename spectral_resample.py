@@ -162,14 +162,14 @@ def resample(in_file,out_file,disclaimer, logger):
         agg_fwhm  = image.fwhm
 
     else:
-        hi_res_waves = np.arange(350,2600)
-        fwhm_array = np.zeros((image.bands,2600-350))
+        hi_res_waves = np.arange(300,2600)
+        fwhm_array = np.zeros((image.bands,2600-300))
 
         for i,(wave,fwhm) in enumerate(zip(image.wavelengths,image.fwhm)):
             fwhm_array[i] = gaussian(hi_res_waves,wave,fwhm)
 
         sum_fwhm  = np.nansum(view_as_blocks(fwhm_array[:(image.bands//bins) * bins],
-                                               (bins,2600-350)),axis=(1,2))
+                                               (bins,2600-300)),axis=(1,2))
         agg_fwhm = []
         for i in range(len(agg_waves)):
             arg_max = np.argmax(sum_fwhm[i])
